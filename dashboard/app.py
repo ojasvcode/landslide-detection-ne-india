@@ -169,7 +169,7 @@ with tab2:
         color = color_map.get(val, "black")
         return f'background-color: {color}; color: white'
         
-    st.dataframe(top_risk.style.applymap(highlight_risk, subset=['risk_level']), use_container_width=True)
+    st.dataframe(top_risk.style.map(highlight_risk, subset=['risk_level']), use_container_width=True)
 
 with tab3:
     st.header("Weather Monitor")
