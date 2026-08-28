@@ -258,13 +258,7 @@ if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=
     st.sidebar.warning("📞 NDRF Helpline: 011-24363260\n📞 Disaster Helpline: 1078\n📞 Police: 100 | Ambulance: 108")
     play_emergency_siren()
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("**📍 Track Exact Location**")
-st.sidebar.caption("Enable for precise localized weather animations.")
-loc = streamlit_geolocation()
-if loc and loc.get('latitude'):
-    st.session_state['exact_lat'] = loc['latitude']
-    st.session_state['exact_lon'] = loc['longitude']
+
 
 st.sidebar.markdown("---")
 
