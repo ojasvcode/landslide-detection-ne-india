@@ -2,11 +2,22 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
-from folium import Map, CircleMarker, Popup, LayerControl, TileLayer
+import sqlite3
+from streamlit_geolocation import streamlit_geolocation
+from folium import Map, CircleMarker, Popup, LayerControl, TileLayer, CircleMarker, Popup, LayerControl, TileLayer
 from streamlit_folium import st_folium
 import plotly.express as px
 import plotly.graph_objects as go
 import json
+
+# --- DB Setup ---
+conn = sqlite3.connect('incidents.db', check_same_thread=False)
+c = conn.cursor()
+c.execute('''CREATE TABLE IF NOT EXISTS incidents
+             (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+              name TEXT, date TEXT, state TEXT, lat REAL, lon REAL, severity TEXT, description TEXT)''')
+conn.commit()
+
 
 # Try to import from src, fallback to sample data if not available
 try:
@@ -282,6 +293,16 @@ with tab7:
     st.header("Report a Landslide Incident")
     st.info("Use this form to register a new landslide event into the system database.")
     
+    st.subheader("📍 Get Current Location")
+    location = streamlit_geolocation()
+    
+    default_lat = 25.0
+    default_lon = 92.0
+    if location and location.get('latitude') is not None and location.get('longitude') is not None:
+        default_lat = float(location['latitude'])
+        default_lon = float(location['longitude'])
+        st.success(f"Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f}")
+    
     with st.form("incident_report_form"):
         col1, col2 = st.columns(2)
         with col1:
@@ -289,8 +310,8 @@ with tab7:
             incident_date = st.date_input("Date of Incident", datetime.date.today())
             incident_state = st.selectbox("State", NE_STATES)
         with col2:
-            lat = st.number_input("Latitude", min_value=20.0, max_value=30.0, value=25.0)
-            lon = st.number_input("Longitude", min_value=85.0, max_value=100.0, value=92.0)
+            lat = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, format="%.6f")
+            lon = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, format="%.6f")
             severity = st.selectbox("Severity", ["Minor (Road Blocked)", "Moderate (Property Damage)", "Severe (Casualties/Major Destruction)"])
         
         description = st.text_area("Incident Description", placeholder="Describe the landslide extent, triggers (e.g. heavy rain), and damages...")
@@ -299,8 +320,21 @@ with tab7:
         
         if submitted:
             if reporter_name and description:
-                st.success(f"✅ Incident reported successfully for {incident_state} at ({lat}, {lon})!")
+                # Save to database
+                c.execute("INSERT INTO incidents (name, date, state, lat, lon, severity, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                          (reporter_name, str(incident_date), incident_state, lat, lon, severity, description))
+                conn.commit()
+                st.success(f"✅ Incident reported successfully and saved to database!")
                 st.balloons()
-                # In a real app, you would save this to a database or append to the inventory CSV here
             else:
                 st.error("Please fill in your name and a description of the incident.")
+    
+    st.markdown("---")
+    st.subheader("Recent Reported Incidents")
+    recent_incidents = pd.read_sql("SELECT * FROM incidents ORDER BY id DESC", conn)
+    if not recent_incidents.empty:
+        st.dataframe(recent_incidents, use_container_width=True)
+        # Also plot on a map
+        st.map(recent_incidents, latitude="lat", longitude="lon", color="#ff0000", size=50)
+    else:
+        st.write("No incidents reported yet.")

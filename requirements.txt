@@ -18,3 +18,4 @@ pydeck>=0.8
 branca>=0.7
 fastapi>=0.100.0
 uvicorn>=0.23.0
+streamlit-geolocation>=0.0.10
