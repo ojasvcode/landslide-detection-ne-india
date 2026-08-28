@@ -168,6 +168,14 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
 st.sidebar.title('🏔️ Landslide Detection System')
 st.sidebar.subheader('Community Safety Portal')
 
+st.sidebar.markdown("<h3 style='text-align: center; color: red; margin-bottom: 0px;'>EMERGENCY</h3>", unsafe_allow_html=True)
+if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
+    st.sidebar.error("🚨 SOS Alert Triggered!")
+    st.sidebar.warning("📞 NDRF Helpline: 011-24363260\n📞 Disaster Helpline: 1078\n📞 Police: 100 | Ambulance: 108")
+    play_emergency_siren()
+
+st.sidebar.markdown("---")
+
 
 st.sidebar.markdown("**📍 Where are you checking today?**")
 region_filter = st.sidebar.radio("Select Region", ["North East India", "Outside North East", "All India"], label_visibility="collapsed")
@@ -242,14 +250,7 @@ for i in range(40):
 st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
 
 
-st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)
-st.sidebar.markdown("<h3 style='text-align: center; color: red;'>EMERGENCY</h3>", unsafe_allow_html=True)
-if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
-    st.sidebar.error("🚨 SOS Alert Triggered!")
-    st.sidebar.warning("📞 NDRF Helpline: 011-24363260")
-    st.sidebar.warning("📞 Disaster Helpline: 1078")
-    st.sidebar.warning("📞 Police: 100 | Ambulance: 108")
-    play_emergency_siren()
+
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Credits:**\nDeveloped with ❤️ by HackX Team.")
