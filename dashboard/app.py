@@ -90,7 +90,83 @@ selected_date = st.sidebar.date_input('Date for Analysis', datetime.date.today()
 
 refresh = st.sidebar.button('🔄 Refresh Data')
 
+
 st.sidebar.markdown("---")
+theme = st.sidebar.toggle("🌙 Dark Mode", value=True)
+
+# 2. Mountain cursor + theme CSS + animated weather effects
+if theme:
+    bg_color = "#0e1117"
+    text_color = "#fafafa"
+    card_bg = "#262730"
+else:
+    bg_color = "#ffffff"
+    text_color = "#1a1a2e"
+    card_bg = "#f0f2f6"
+
+custom_css = f'''
+<style>
+/* Mountain cursor */
+html, body, [class*="css"] {{
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewport='0 0 32 32'><text y='28' font-size='28'>🏔️</text></svg>") 4 4, auto;
+}}
+a, button, [role='button'], .stButton > button {{
+    cursor: url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewport='0 0 28 28'><text y='24' font-size='24'>👆</text></svg>\") 4 4, pointer !important;
+}}
+
+/* Theme override */
+.stApp {{
+    background-color: {bg_color};
+    color: {text_color};
+}}
+
+/* Animated rain effect on background */
+@keyframes rainDrop {{
+    0% {{ top: -5vh; opacity: 0.7; }}
+    100% {{ top: 105vh; opacity: 0; }}
+}}
+.rain-container {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}}
+.rain-drop {{
+    position: absolute;
+    top: -5vh;
+    width: 2px;
+    height: 15px;
+    background: linear-gradient(transparent, rgba(100, 180, 255, 0.6));
+    border-radius: 0 0 2px 2px;
+    animation: rainDrop linear infinite;
+}}
+
+/* Alert sound indicator */
+.risk-pulse {{
+    animation: pulse 1.5s ease-in-out infinite;
+}}
+@keyframes pulse {{
+    0%, 100% {{ opacity: 1; }}
+    50% {{ opacity: 0.5; }}
+}}
+</style>
+'''
+st.markdown(custom_css, unsafe_allow_html=True)
+
+# Animated weather rain effect
+import random as _rnd
+rain_divs = ""
+for i in range(40):
+    left = _rnd.uniform(0, 100)
+    dur = _rnd.uniform(1.5, 3.5)
+    delay = _rnd.uniform(0, 3)
+    rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
+st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
+
 
 st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: red;'>EMERGENCY</h3>", unsafe_allow_html=True)
@@ -119,6 +195,31 @@ if selected_risk:
 filtered_df = df_scores[mask]
 
 # --- Main App ---
+
+
+
+# Risk level alert sounds
+def play_risk_alert(risk_level):
+    # Generate different beep tones for different risk levels using base64 WAV
+    import struct, math
+    sample_rate = 8000
+    duration = 0.3
+    freqs = {"LOW": 440, "MODERATE": 550, "HIGH": 660, "VERY_HIGH": 880, "SEVERE": 1100}
+    freq = freqs.get(risk_level, 440)
+    n_samples = int(sample_rate * duration)
+    samples = []
+    for i in range(n_samples):
+        t = i / sample_rate
+        val = int(32767 * 0.5 * math.sin(2 * math.pi * freq * t))
+        samples.append(struct.pack('<h', val))
+    audio_data = b''.join(samples)
+    # WAV header
+    data_size = len(audio_data)
+    header = struct.pack('<4sI4s4sIHHIIHH4sI',
+        b'RIFF', 36 + data_size, b'WAVE', b'fmt ', 16, 1, 1, sample_rate, sample_rate * 2, 2, 16, b'data', data_size)
+    wav = header + audio_data
+    b64 = base64.b64encode(wav).decode()
+    st.markdown(f'<audio autoplay><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>', unsafe_allow_html=True)
 
 
 def laughing_emojis():
