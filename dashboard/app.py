@@ -347,7 +347,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🤖 AI Insights", 
     "📋 Past Events", 
     "🌍 Earthquakes",
-    "📝 Submit Report"
+    "📡 Report Status"
 ])
 
 def get_color(level):
@@ -603,133 +603,9 @@ with tab6:
 
 
 with tab7:
-    st.header("📝 Submit Incident Report")
-    st.info("Use this form to register a new landslide event into the system database.")
+    st.header("📡 Live Incident & Alert Tracking")
+    st.info("Monitor the status of all reported landslides and the live dispatch status of emergency response agencies.")
     
-    st.subheader("📍 Get Current Location")
-    location = streamlit_geolocation()
-    
-    default_lat = 25.0
-    default_lon = 92.0
-    detected_state = None
-    
-    # State bounding boxes for auto-detection (all Indian states + UTs)
-    STATE_BOUNDS = {
-        "Andhra Pradesh": (12.4, 19.9, 76.7, 84.8),
-        "Arunachal Pradesh": (26.5, 29.5, 91.5, 97.5),
-        "Assam": (24.0, 28.0, 89.5, 96.5),
-        "Bihar": (24.2, 27.5, 83.3, 88.2),
-        "Chhattisgarh": (17.8, 24.1, 80.2, 84.4),
-        "Goa": (14.9, 15.8, 73.6, 74.3),
-        "Gujarat": (20.1, 24.7, 68.2, 74.5),
-        "Haryana": (27.6, 30.9, 74.5, 77.6),
-        "Himachal Pradesh": (30.4, 33.3, 75.6, 79.0),
-        "Jharkhand": (21.9, 25.3, 83.3, 87.9),
-        "Karnataka": (11.6, 18.5, 74.0, 78.6),
-        "Kerala": (8.2, 12.8, 74.8, 77.4),
-        "Madhya Pradesh": (21.1, 26.9, 74.0, 82.8),
-        "Maharashtra": (15.6, 22.0, 72.6, 80.9),
-        "Manipur": (23.8, 25.7, 93.0, 94.8),
-        "Meghalaya": (25.0, 26.2, 89.8, 92.8),
-        "Mizoram": (21.9, 24.5, 92.2, 93.5),
-        "Nagaland": (25.2, 27.0, 93.3, 95.3),
-        "Odisha": (17.8, 22.6, 81.3, 87.5),
-        "Punjab": (29.5, 32.5, 73.9, 76.9),
-        "Rajasthan": (23.0, 30.2, 69.5, 78.3),
-        "Sikkim": (27.0, 28.2, 88.0, 89.0),
-        "Tamil Nadu": (8.0, 13.6, 76.2, 80.4),
-        "Telangana": (15.8, 19.9, 77.2, 81.3),
-        "Tripura": (22.9, 24.5, 91.1, 92.4),
-        "Uttar Pradesh": (23.9, 30.4, 77.1, 84.6),
-        "Uttarakhand": (28.7, 31.5, 77.6, 81.0),
-        "West Bengal": (21.5, 27.2, 86.0, 89.9),
-        "Delhi": (28.4, 28.9, 76.8, 77.4),
-        "Jammu & Kashmir": (32.2, 37.1, 73.3, 80.3),
-        "Ladakh": (32.5, 37.0, 75.5, 80.3),
-        "Chandigarh": (30.6, 30.8, 76.7, 76.9),
-        "Puducherry": (10.7, 12.0, 79.6, 80.0),
-        "Andaman & Nicobar": (6.7, 13.7, 92.2, 94.3),
-        "Lakshadweep": (8.2, 12.5, 71.7, 74.0),
-        "Dadra & Nagar Haveli": (20.0, 20.4, 72.9, 73.3),
-        "Daman & Diu": (20.3, 20.8, 70.8, 73.0),
-    }
-    
-    ALL_STATES = sorted(STATE_BOUNDS.keys())
-    
-    def detect_state(lat, lon):
-        for state, (min_lat, max_lat, min_lon, max_lon) in STATE_BOUNDS.items():
-            if min_lat <= lat <= max_lat and min_lon <= lon <= max_lon:
-                return state
-        return None
-    
-    if location and location.get('latitude') is not None and location.get('longitude') is not None:
-        default_lat = float(location['latitude'])
-        default_lon = float(location['longitude'])
-        detected_state = detect_state(default_lat, default_lon)
-        if detected_state:
-            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — Detected State: **{detected_state}**")
-        else:
-            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — (Outside India)")
-    
-    default_state_idx = ALL_STATES.index(detected_state) if detected_state and detected_state in ALL_STATES else 0
-    
-    with st.form("incident_report_form"):
-        col1, col2 = st.columns(2)
-        with col1:
-            reporter_name = st.text_input("Your Name / Organization")
-            incident_date = st.date_input("Date of Incident", datetime.date.today())
-            incident_state = st.selectbox("State", ALL_STATES, index=default_state_idx)
-        with col2:
-            lat = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, format="%.6f")
-            lon = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, format="%.6f")
-            severity = st.selectbox("Severity", ["Minor (Road Blocked)", "Moderate (Property Damage)", "Severe (Casualties/Major Destruction)"])
-        
-        description = st.text_area("Incident Description", placeholder="Describe the landslide extent, triggers (e.g. heavy rain), and damages...")
-        
-        submitted = st.form_submit_button("Submit Incident Report", type="primary")
-        
-        if submitted:
-            if reporter_name and description:
-                # Save to database
-                c.execute("INSERT INTO incidents (name, date, state, lat, lon, severity, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                          (reporter_name, str(incident_date), incident_state, lat, lon, severity, description))
-                conn.commit()
-                st.success(f"✅ Thank you for letting us know, {reporter_name}! Help is on the way. Please stay safe.")
-                
-                # Emergency alert notification
-                alert_html = f'''
-                <div style="background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%); 
-                     border-radius: 12px; padding: 20px; margin: 10px 0; color: white; 
-                     border: 2px solid #ff6666; box-shadow: 0 4px 15px rgba(255,0,0,0.3);">
-                    <h3 style="margin:0; color:white;">🚨 HELP IS ON THE WAY</h3>
-                    <hr style="border-color: rgba(255,255,255,0.3);">
-                    <p style="margin:5px 0;"><strong>📍 Location:</strong> {incident_state} ({lat:.4f}, {lon:.4f})</p>
-                    <p style="margin:5px 0;"><strong>📅 Date:</strong> {incident_date}</p>
-                    <p style="margin:5px 0;"><strong>⚠️ Severity:</strong> {severity}</p>
-                    <p style="margin:5px 0;"><strong>👤 Reporter:</strong> {reporter_name}</p>
-                    <hr style="border-color: rgba(255,255,255,0.3);">
-                    <p style="margin:5px 0;">✅ NDRF Team Notified</p>
-                    <p style="margin:5px 0;">✅ State Disaster Management Authority Alerted</p>
-                    <p style="margin:5px 0;">✅ Nearest Hospital Informed</p>
-                    <p style="margin:5px 0;">✅ Local Police Control Room Notified</p>
-                </div>
-                '''
-                st.markdown(alert_html, unsafe_allow_html=True)
-                play_emergency_siren()
-                
-                # Dispatch alerts to agencies and save to DB
-                last_id = c.execute("SELECT MAX(id) FROM incidents").fetchone()[0]
-                dispatch_emergency_alerts(last_id, incident_state, severity, lat, lon)
-                
-                # Show alert dispatch status
-                alerts = pd.read_sql(f"SELECT agency, status, timestamp FROM emergency_alerts WHERE incident_id={last_id}", conn)
-                st.subheader("📡 Alert Dispatch Status")
-                for _, row in alerts.iterrows():
-                    st.markdown(f'<div style="background:#1a472a;padding:8px 15px;border-radius:8px;margin:4px 0;color:#4ade80;">✅ <strong>{row["agency"]}</strong> — {row["status"]} at {row["timestamp"][:19]}</div>', unsafe_allow_html=True)
-            else:
-                st.error("Please fill in your name and a description of the incident.")
-    
-    st.markdown("---")
     st.subheader("Recent Reported Incidents")
     recent_incidents = pd.read_sql("SELECT * FROM incidents ORDER BY id DESC", conn)
     if not recent_incidents.empty:
