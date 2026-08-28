@@ -9,6 +9,7 @@ from streamlit_folium import st_folium
 import plotly.express as px
 import plotly.graph_objects as go
 import json
+import base64
 
 # --- DB Setup ---
 conn = sqlite3.connect('incidents.db', check_same_thread=False)
@@ -118,6 +119,18 @@ if selected_risk:
 filtered_df = df_scores[mask]
 
 # --- Main App ---
+
+def play_cheer():
+    try:
+        with open("dashboard/cheering.mp3", "rb") as f:
+            data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f'<audio autoplay="true"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
+        st.markdown(md, unsafe_allow_html=True)
+    except Exception as e:
+        pass
+
+
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗺️ Risk Map", 
     "📊 Risk Analysis", 
@@ -326,6 +339,7 @@ with tab7:
                 conn.commit()
                 st.success(f"✅ Incident reported successfully and saved to database!")
                 st.balloons()
+                play_cheer()
             else:
                 st.error("Please fill in your name and a description of the incident.")
     
