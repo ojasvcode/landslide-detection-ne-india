@@ -273,14 +273,15 @@ import random as _rnd
 weather_emojis = get_local_weather_emojis()
 rain_divs = ""
 
-for i in range(40):
+# Significantly reduced emoji count (from 40 to 8) to be less distracting
+for i in range(8):
     left = _rnd.uniform(0, 100)
     # Make sunny/cloudy animations float slower, rain/storms fall faster
-    dur = _rnd.uniform(4.5, 12.0) if '☀️' in weather_emojis or '☁️' in weather_emojis else _rnd.uniform(1.5, 4.5)
+    dur = _rnd.uniform(6.0, 15.0) if '☀️' in weather_emojis or '☁️' in weather_emojis else _rnd.uniform(2.5, 5.5)
     delay = _rnd.uniform(0, 5)
     
     emoji_char = _rnd.choice(weather_emojis)
-    rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{emoji_char}</div>'
+    rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s; opacity: 0.6;">{emoji_char}</div>'
 
 st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
 
