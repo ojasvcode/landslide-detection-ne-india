@@ -123,7 +123,7 @@ filtered_df = df_scores[mask]
 
 def laughing_emojis():
     import random
-    emojis_list = ['😂', '🤣', '😆']
+    emojis_list = ['😂', '🤣', '😆', '💧', '💧', '💦', '🌧️']
     divs = ""
     for i in range(30):
         e = random.choice(emojis_list)
@@ -343,17 +343,43 @@ with tab7:
     
     default_lat = 25.0
     default_lon = 92.0
+    detected_state = None
+    
+    # State bounding boxes for auto-detection
+    STATE_BOUNDS = {
+        "Arunachal Pradesh": (26.5, 29.5, 91.5, 97.5),
+        "Assam": (24.0, 28.0, 89.5, 96.5),
+        "Manipur": (23.8, 25.7, 93.0, 94.8),
+        "Meghalaya": (25.0, 26.2, 89.8, 92.8),
+        "Mizoram": (21.9, 24.5, 92.2, 93.5),
+        "Nagaland": (25.2, 27.0, 93.3, 95.3),
+        "Sikkim": (27.0, 28.2, 88.0, 89.0),
+        "Tripura": (22.9, 24.5, 91.1, 92.4),
+    }
+    
+    def detect_state(lat, lon):
+        for state, (min_lat, max_lat, min_lon, max_lon) in STATE_BOUNDS.items():
+            if min_lat <= lat <= max_lat and min_lon <= lon <= max_lon:
+                return state
+        return None
+    
     if location and location.get('latitude') is not None and location.get('longitude') is not None:
         default_lat = float(location['latitude'])
         default_lon = float(location['longitude'])
-        st.success(f"Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f}")
+        detected_state = detect_state(default_lat, default_lon)
+        if detected_state:
+            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — Detected State: **{detected_state}**")
+        else:
+            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — (Outside NE India)")
+    
+    default_state_idx = NE_STATES.index(detected_state) if detected_state and detected_state in NE_STATES else 0
     
     with st.form("incident_report_form"):
         col1, col2 = st.columns(2)
         with col1:
             reporter_name = st.text_input("Your Name / Organization")
             incident_date = st.date_input("Date of Incident", datetime.date.today())
-            incident_state = st.selectbox("State", NE_STATES)
+            incident_state = st.selectbox("State", NE_STATES, index=default_state_idx)
         with col2:
             lat = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, format="%.6f")
             lon = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, format="%.6f")
