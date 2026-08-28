@@ -180,11 +180,7 @@ with tab3:
         st.subheader("Current Rainfall")
         if not filtered_df.empty:
             filtered_df["rainfall_24h"] = pd.to_numeric(filtered_df["rainfall_24h"], errors="coerce").fillna(0)
-            fig_rain = px.scatter_mapbox(filtered_df, lat="lat", lon="lon", size="rainfall_24h", color="rainfall_24h",
-                                     hover_name="name", hover_data=["state", "rainfall_24h"],
-                                     color_continuous_scale="Blues", size_max=20, zoom=6,
-                                     mapbox_style="carto-positron")
-            st.plotly_chart(fig_rain, use_container_width=True)
+            st.map(filtered_df, latitude="lat", longitude="lon", size="rainfall_24h", color="#1f77b4", use_container_width=True)
         else:
             st.warning("No data to map.")
         
@@ -192,11 +188,7 @@ with tab3:
         st.subheader("Soil Moisture Levels")
         if not filtered_df.empty:
             filtered_df["soil_moisture"] = pd.to_numeric(filtered_df["soil_moisture"], errors="coerce").fillna(0)
-            fig_soil = px.scatter_mapbox(filtered_df, lat="lat", lon="lon", size="soil_moisture", color="soil_moisture",
-                                     hover_name="name", hover_data=["state", "soil_moisture"],
-                                     color_continuous_scale="BrBG", size_max=20, zoom=6,
-                                     mapbox_style="carto-positron")
-            st.plotly_chart(fig_soil, use_container_width=True)
+            st.map(filtered_df, latitude="lat", longitude="lon", size="soil_moisture", color="#8c564b", use_container_width=True)
         else:
             st.warning("No data to map.")
 
@@ -272,9 +264,6 @@ with tab6:
     st.dataframe(seismic_data, use_container_width=True)
     
     if not seismic_data.empty:
-        fig_quake = px.scatter_mapbox(seismic_data, lat="Lat", lon="Lon", size="Magnitude", color="Magnitude",
-                                  hover_name="Location", color_continuous_scale="Reds", size_max=15, zoom=6,
-                                  mapbox_style="carto-positron", title="Recent Earthquakes")
-        st.plotly_chart(fig_quake, use_container_width=True)
+        st.map(seismic_data, latitude="Lat", longitude="Lon", size="Magnitude", color="#d62728", use_container_width=True)
     else:
         st.warning("No data to map.")
