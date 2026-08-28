@@ -255,7 +255,7 @@ for i in range(60):
     is_emoji = _rnd.choice([True, False, False]) # 33% chance to be an emoji
     
     if is_emoji:
-        emoji_char = _rnd.choice(['😂', '🐍', '🐍😂'])
+        emoji_char = _rnd.choice(['😂', '🐍', '🐍😂', '💩', '💩😂'])
         rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{emoji_char}</div>'
     else:
         rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
