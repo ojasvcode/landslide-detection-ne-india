@@ -251,7 +251,7 @@ if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=
     play_emergency_siren()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Credits:**\nDeveloped by Regional Landslide Response Team.")
+st.sidebar.markdown("**Credits:**\nDeveloped with ❤️ by HackX Team.")
 
 
 # --- Data Loading ---
