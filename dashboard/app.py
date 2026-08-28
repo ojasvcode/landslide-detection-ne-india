@@ -55,12 +55,12 @@ if 'registered_users' not in st.session_state:
     st.session_state['registered_users'] = {'admin': 'admin123'}
 
 if not st.session_state['logged_in']:
-    st.markdown("<h1 style='text-align: center; margin-top: 100px;'>🔒 Welcome to the Safety Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; margin-top: 100px;'>System Authentication</h1>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.session_state['auth_mode'] == 'login':
-            st.markdown("<h4 style='text-align: center;'>Please log in to continue</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: center;'>Enter authorized credentials to access the platform.</h4>", unsafe_allow_html=True)
             with st.form("login_form"):
                 username = st.text_input("Username", placeholder="admin")
                 password = st.text_input("Password", type="password", placeholder="admin123")
@@ -78,7 +78,7 @@ if not st.session_state['logged_in']:
                 st.rerun()
                 
         elif st.session_state['auth_mode'] == 'signup':
-            st.markdown("<h4 style='text-align: center;'>Create a New Account</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: center;'>Register New Personnel</h4>", unsafe_allow_html=True)
             with st.form("signup_form"):
                 new_username = st.text_input("Choose Username")
                 new_email = st.text_input("Email Address")
@@ -101,7 +101,7 @@ if not st.session_state['logged_in']:
                 st.rerun()
                 
         elif st.session_state['auth_mode'] == 'otp_verify':
-            st.markdown("<h4 style='text-align: center;'>Verify Your Account</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align: center;'>Multi-Factor Authentication</h4>", unsafe_allow_html=True)
             
             # Simulate automatic OTP sending (mock notification)
             st.info(f"📲 SYSTEM MESSAGE: A 6-digit OTP has been sent to your device. (Mock OTP: **{st.session_state['generated_otp']}**)")
@@ -163,8 +163,8 @@ st.markdown('''
 
 <div class="dash-header">
     <div class="dash-header-center">
-        <p class="dash-title-main">🏔️ Landslide Safety & Early Warning Portal</p>
-        <p class="dash-subtitle">Keeping our communities safe with real-time monitoring and instant alerts.</p>
+        <p class="dash-title-main">Landslide Safety & Early Warning Portal</p>
+        <p class="dash-subtitle">Real-time geotechnical monitoring and dispatch platform.</p>
     </div>
 </div>
 ''', unsafe_allow_html=True)
@@ -245,16 +245,16 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
     conn.commit()
 
 # --- Sidebar ---
-st.sidebar.title('🏔️ Landslide Detection System')
-st.sidebar.subheader('Community Safety Portal')
+st.sidebar.title('Landslide Detection System')
+st.sidebar.subheader('Operations Dashboard')
 
-if st.sidebar.button("🚪 Logout", use_container_width=True):
+if st.sidebar.button("Logout", use_container_width=True):
     st.session_state['logged_in'] = False
     st.rerun()
 
 st.sidebar.markdown("<h3 style='text-align: center; color: red; margin-bottom: 0px;'>EMERGENCY</h3>", unsafe_allow_html=True)
-if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
-    st.sidebar.error("🚨 SOS Alert Triggered!")
+if st.sidebar.button("INITIATE EMERGENCY PROTOCOL", type="primary", use_container_width=True):
+    st.sidebar.error("EMERGENCY PROTOCOL ACTIVATED.")
     st.sidebar.warning("📞 NDRF Helpline: 011-24363260\n📞 Disaster Helpline: 1078\n📞 Police: 100 | Ambulance: 108")
     play_emergency_siren()
 
@@ -263,7 +263,7 @@ if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=
 st.sidebar.markdown("---")
 
 
-st.sidebar.markdown("**📍 Where are you checking today?**")
+st.sidebar.markdown("**Filter by Region**")
 region_filter = st.sidebar.radio("Select Region", ["North East India", "Outside North East", "All India"], label_visibility="collapsed")
 
 if region_filter == "North East India":
@@ -278,7 +278,7 @@ selected_states = st.sidebar.multiselect('Select States', available_states, defa
 selected_risk = st.sidebar.multiselect('Risk Level', ["LOW", "MODERATE", "HIGH", "VERY_HIGH", "SEVERE"], default=["HIGH", "VERY_HIGH", "SEVERE"])
 selected_date = st.sidebar.date_input('Date for Analysis', datetime.date.today())
 
-refresh = st.sidebar.button('🔄 Refresh Data')
+refresh = st.sidebar.button('Refresh Dataset')
 
 
 st.sidebar.markdown("---")
@@ -288,97 +288,17 @@ custom_css = f'''
 <style>
 
 
-/* Animated rain effect on background */
-@keyframes rainDrop {{
-    0% {{ top: -5vh; opacity: 0.7; }}
-    100% {{ top: 105vh; opacity: 0; }}
-}}
-.rain-container {{
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}}
-.rain-drop {{
-    position: absolute;
-    top: -5vh;
-    width: 2px;
-    height: 15px;
-    background: linear-gradient(transparent, rgba(100, 180, 255, 0.6));
-    border-radius: 0 0 2px 2px;
-    animation: rainDrop linear infinite;
-}}
-.emoji-drop {{
-    position: absolute;
-    top: -5vh;
-    font-size: 24px;
-    animation: rainDrop linear infinite;
-}}
-
-/* Alert sound indicator */
-.risk-pulse {{
-    animation: pulse 1.5s ease-in-out infinite;
-}}
-@keyframes pulse {{
-    0%, 100% {{ opacity: 1; }}
-    50% {{ opacity: 0.5; }}
-}}
 </style>
 '''
 st.markdown(custom_css, unsafe_allow_html=True)
 
-@st.cache_data(ttl=3600)
-def get_local_weather_emojis(lat=None, lon=None):
-    try:
-        if lat is None or lon is None:
-            # Detect approximate location via IP
-            loc_data = requests.get("http://ip-api.com/json/", timeout=3).json()
-            lat, lon = loc_data['lat'], loc_data['lon']
-        
-        # Fetch actual real-time weather from Open-Meteo
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=weathercode"
-        resp = requests.get(url, timeout=3).json()
-        code = resp['current']['weathercode']
-        
-        # WMO Weather interpretation codes
-        if code == 0: return ['☀️', '🌞', '✨'] # Clear
-        if code in [1,2]: return ['⛅', '🌤️', '🍃'] # Partly cloudy
-        if code == 3: return ['☁️', '🌥️', '☁️'] # Overcast
-        if code in [51,53,55,61,63,65,80,81,82]: return ['🌧️', '💧', '☔'] # Rain
-        if code in [71,73,75,85,86]: return ['❄️', '🌨️', '⛄'] # Snow
-        if code in [95,96,99]: return ['⛈️', '⚡', '🌩️'] # Thunderstorm
-        return ['☁️', '🌫️']
-    except:
-        return ['🌧️', '💧'] # Fallback
 
-# Animated weather effect based on REAL local weather
-import random as _rnd
-lat_val = st.session_state.get('exact_lat')
-lon_val = st.session_state.get('exact_lon')
-weather_emojis = get_local_weather_emojis(lat_val, lon_val)
-rain_divs = ""
-
-# Significantly reduced emoji count (from 40 to 8) to be less distracting
-for i in range(8):
-    left = _rnd.uniform(0, 100)
-    # Make sunny/cloudy animations float slower, rain/storms fall faster
-    dur = _rnd.uniform(6.0, 15.0) if '☀️' in weather_emojis or '☁️' in weather_emojis else _rnd.uniform(2.5, 5.5)
-    delay = _rnd.uniform(0, 5)
-    
-    emoji_char = _rnd.choice(weather_emojis)
-    rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s; opacity: 0.6;">{emoji_char}</div>'
-
-st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
 
 
 
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Credits:**\nDeveloped with ❤️ by HackX Team.")
+st.sidebar.markdown("**Credits:**\nDeveloped by HackX Team.")
 
 
 # --- Data Loading ---
@@ -401,7 +321,7 @@ filtered_df = df_scores[mask]
 # --- Main App ---
 col_title, col_admin = st.columns([5, 2])
 with col_admin:
-    with st.expander("🔐 Admin Access"):
+    with st.expander("Administrative Access"):
         admin_password = st.text_input("Password", type="password")
         if admin_password == "admin123":
             st.success("Admin Authenticated")
@@ -425,7 +345,7 @@ with col_admin:
             # Clear All
             st.write("---")
             st.write("**Bulk Actions**")
-            if st.button("🗑️ Clear All Reports", type="primary", use_container_width=True):
+            if st.button("Clear All Incident Reports", type="primary", use_container_width=True):
                 c.execute("DELETE FROM emergency_alerts")
                 c.execute("DELETE FROM incidents")
                 conn.commit()
@@ -466,12 +386,12 @@ def play_risk_alert(risk_level):
 
 
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "🗺️ Local Map", 
-    "🌧️ Weather", 
-    "🤖 AI Insights", 
-    "📋 Past Events", 
-    "🌍 Earthquakes",
-    "📡 Report Status"
+    "Regional Map", 
+    "Meteorological Data", 
+    "Risk Diagnostics", 
+    "Incident Log", 
+    "Seismic Activity",
+    "Dispatch Status"
 ])
 
 def get_color(level):
@@ -479,7 +399,7 @@ def get_color(level):
     return colors.get(level, "gray")
 
 with tab1:
-    st.header("🗺️ See What's Happening in Your Area")
+    st.header("Regional Risk Overview")
     
     m = Map(location=[26.0, 92.5], zoom_start=7)
     TileLayer('CartoDB positron').add_to(m)
@@ -511,14 +431,14 @@ with tab1:
     col3.metric("Last Updated", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 with tab2:
-    st.header("🌧️ Current Weather & Rainfall")
-    st.info("Live weather data fetched directly from Open-Meteo satellite APIs.")
+    st.header("Current Meteorological Conditions")
+    st.info("Live meteorological data via Open-Meteo telemetry.")
     
     colA, colB = st.columns([3, 1])
     with colA:
-        selected_weather_loc = st.selectbox("📍 Select Location for Live Weather", df_scores['name'].tolist(), key="weather_loc")
+        selected_weather_loc = st.selectbox("Select Sensor Location", df_scores['name'].tolist(), key="weather_loc")
     with colB:
-        st.markdown("**Or Track Location**")
+        st.markdown("**Use Current Device Location**")
         user_loc = streamlit_geolocation()
 
     # Determine coordinates
@@ -542,10 +462,10 @@ with tab2:
         st.markdown(f"### Live Conditions in {loc_name}")
         
         col_w1, col_w2, col_w3, col_w4 = st.columns(4)
-        col_w1.metric("🌡️ Temperature", f"{current.get('temperature_2m', '--')} °C")
-        col_w2.metric("🌧️ Precipitation", f"{current.get('precipitation', '--')} mm")
-        col_w3.metric("💧 Humidity", f"{current.get('relative_humidity_2m', '--')} %")
-        col_w4.metric("💨 Wind Speed", f"{current.get('wind_speed_10m', '--')} km/h")
+        col_w1.metric("Temperature", f"{current.get('temperature_2m', '--')} °C")
+        col_w2.metric("Precipitation", f"{current.get('precipitation', '--')} mm")
+        col_w3.metric("Humidity", f"{current.get('relative_humidity_2m', '--')} %")
+        col_w4.metric("Wind Speed", f"{current.get('wind_speed_10m', '--')} km/h")
         
         st.caption(f"GPS Coordinates: {lat:.4f}° N, {lon:.4f}° E")
     except Exception as e:
@@ -574,11 +494,11 @@ with tab2:
     st.dataframe(df_scores[['name', 'state', 'rainfall_24h', 'soil_moisture', 'slope']], use_container_width=True)
 
 with tab3:
-    st.header("🤖 Deep Dive: AI Risk Analysis")
-    st.info("Explore exactly how the machine learning model calculates risk thresholds and makes decisions.")
+    st.header("Machine Learning Risk Diagnostics")
+    st.info("Explore feature attribution and classification confidence of the predictive model.")
     
     # 1. Global AI Pipeline Info
-    with st.expander("🧠 How the AI Pipeline Works", expanded=False):
+    with st.expander("System Architecture Overview", expanded=False):
         st.write("""
         Our Landslide Detection System uses a **Gradient Boosting Model (XGBoost)** trained on over a decade of historical landslide data, terrain topography (DEM), and satellite weather patterns.
         - **Data Ingestion:** Pulls live soil moisture, rainfall, and seismic data via APIs.
@@ -589,7 +509,7 @@ with tab3:
     st.markdown("---")
     
     # 2. Local AI Explanation
-    st.subheader("📍 Location-Specific AI Explanation")
+    st.subheader("Location-Specific Risk Assessment")
     st.write("Select a region to see exactly why the AI assigned its current risk level.")
     selected_loc = st.selectbox("Select Monitoring Location", df_scores['name'].tolist(), label_visibility="collapsed")
     
@@ -599,7 +519,7 @@ with tab3:
     with colA:
         # Dynamic AI Text Summary
         risk = loc_data['risk_level']
-        st.markdown(f"#### AI Summary for {selected_loc}")
+        st.markdown(f"#### Risk Assessment Summary for {selected_loc}")
         if risk in ["SEVERE", "VERY_HIGH"]:
             st.error(f"The AI model flagged **{selected_loc}** as **{risk}** risk. This is primarily driven by acute 24h rainfall ({loc_data['rainfall_24h']:.1f} mm) combined with highly saturated soil ({(loc_data['soil_moisture']*100):.1f}%). The steep terrain (slope {loc_data['slope']:.1f}°) acts as a massive multiplier for these weather factors.")
         elif risk == "HIGH":
@@ -678,8 +598,8 @@ with tab3:
         st.plotly_chart(fig_cm, use_container_width=True)
 
 with tab4:
-    st.header("📋 History of Local Events")
-    st.info("Live catalog of all reported landslide events and historical incidents.")
+    st.header("Historical Incident Catalog")
+    st.info("Database of confirmed geological incidents.")
     
     # Fetch real-time data from database
     try:
@@ -689,7 +609,7 @@ with tab4:
             # Drop lat/lon for the table view so it stays clean
             st.dataframe(realtime_hist_df.drop(columns=['lat', 'lon']), use_container_width=True)
             
-            st.markdown("### 📍 Exact Incident Locations")
+            st.markdown("### Validated Incident Coordinates")
             
             # Use Streamlit's robust built-in map to avoid Plotly version conflicts
             st.map(realtime_hist_df, latitude="lat", longitude="lon", color="#ff0000", size=500, use_container_width=True)
@@ -708,7 +628,7 @@ with tab4:
         st.error(f"Could not load database records: {e}")
 
 with tab5:
-    st.header("🌍 Recent Earthquakes Nearby")
+    st.header("Recent Seismic Activity")
     st.info("Recent earthquakes in the NE region (Placeholder Data).")
     
     seismic_data = pd.DataFrame({
@@ -729,8 +649,8 @@ with tab5:
 
 
 with tab6:
-    st.header("📡 Live Incident & Alert Tracking")
-    st.info("Monitor the status of all reported landslides and the live dispatch status of emergency response agencies.")
+    st.header("Active Dispatch & Tracking")
+    st.info("Monitor the operational status of response agencies and confirmed incidents.")
     
     st.subheader("Recent Reported Incidents")
     recent_incidents = pd.read_sql("SELECT * FROM incidents ORDER BY id DESC", conn)
@@ -742,7 +662,7 @@ with tab6:
         st.write("No incidents reported recently. Stay safe!")
     
     st.markdown("---")
-    st.subheader("📡 Emergency Alert History")
+    st.subheader("Emergency Dispatch History")
     try:
         all_alerts = pd.read_sql("SELECT ea.id, ea.agency, ea.alert_type, ea.status, ea.timestamp, i.state, i.severity FROM emergency_alerts ea JOIN incidents i ON ea.incident_id = i.id ORDER BY ea.id DESC LIMIT 50", conn)
         if not all_alerts.empty:
