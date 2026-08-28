@@ -241,6 +241,40 @@ if selected_risk:
 filtered_df = df_scores[mask]
 
 # --- Main App ---
+col_title, col_admin = st.columns([5, 2])
+with col_admin:
+    with st.expander("🔐 Admin Access"):
+        admin_password = st.text_input("Password", type="password")
+        if admin_password == "admin123":
+            st.success("Admin Authenticated")
+            
+            # Selective Delete
+            st.write("---")
+            st.write("**Selective Delete**")
+            incidents_df = pd.read_sql("SELECT id, name, date, state FROM incidents ORDER BY id DESC", conn)
+            if not incidents_df.empty:
+                opts = {f"ID {r['id']}: {r['name']} ({r['date']})": r['id'] for _, r in incidents_df.iterrows()}
+                sel_inc = st.selectbox("Select Incident", list(opts.keys()), label_visibility="collapsed")
+                if st.button("🗑️ Delete Selected", type="secondary", use_container_width=True):
+                    inc_id = opts[sel_inc]
+                    c.execute("DELETE FROM emergency_alerts WHERE incident_id=?", (inc_id,))
+                    c.execute("DELETE FROM incidents WHERE id=?", (inc_id,))
+                    conn.commit()
+                    st.success("Deleted!")
+            else:
+                st.write("No incidents found.")
+            
+            # Clear All
+            st.write("---")
+            st.write("**Bulk Actions**")
+            if st.button("🗑️ Clear All Reports", type="primary", use_container_width=True):
+                c.execute("DELETE FROM emergency_alerts")
+                c.execute("DELETE FROM incidents")
+                conn.commit()
+                st.success("Database cleared!")
+        elif admin_password != "":
+            st.error("Incorrect password")
+
 
 
 
@@ -273,15 +307,14 @@ def play_risk_alert(risk_level):
 
 
 
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗺️ Risk Map", 
     "📊 Risk Analysis", 
     "🌧️ Weather Monitor", 
     "🔬 Model Insights", 
     "📋 Landslide Inventory", 
     "🌍 Seismic Activity",
-    "🆘 Report & Emergency Alerts",
-    "🔐 Admin Panel"
+    "🆘 Report & Emergency Alerts"
 ])
 
 def get_color(level):
@@ -594,24 +627,3 @@ with tab7:
         st.write("No emergency alerts dispatched yet.")
 
 
-with tab8:
-    st.header("Admin Panel")
-    st.info("Authorized personnel only. Use this panel to manage database records.")
-    
-    admin_password = st.text_input("Enter Admin Password", type="password")
-    
-    if admin_password == "admin123":
-        st.success("Admin authenticated.")
-        st.warning("⚠️ Warning: Clearing incident reports cannot be undone. This will delete all incidents and associated emergency alerts.")
-        
-        if st.button("🗑️ Clear All Incident Reports", type="primary"):
-            try:
-                c.execute("DELETE FROM emergency_alerts")
-                c.execute("DELETE FROM incidents")
-                conn.commit()
-                st.success("All incident reports and emergency alerts have been successfully cleared.")
-                # st.rerun() works in newer streamlit versions to refresh, but let's just show success
-            except Exception as e:
-                st.error(f"Failed to clear database: {e}")
-    elif admin_password != "":
-        st.error("Incorrect password.")
