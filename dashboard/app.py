@@ -520,18 +520,32 @@ with tab2:
     st.header("🌧️ Current Weather & Rainfall")
     st.info("Live weather data fetched directly from Open-Meteo satellite APIs.")
     
-    selected_weather_loc = st.selectbox("📍 Select Location for Live Weather", df_scores['name'].tolist(), key="weather_loc")
-    loc_info = df_scores[df_scores['name'] == selected_weather_loc].iloc[0]
+    colA, colB = st.columns([3, 1])
+    with colA:
+        selected_weather_loc = st.selectbox("📍 Select Location for Live Weather", df_scores['name'].tolist(), key="weather_loc")
+    with colB:
+        st.markdown("**Or Track Location**")
+        user_loc = streamlit_geolocation()
+
+    # Determine coordinates
+    lat = df_scores[df_scores['name'] == selected_weather_loc].iloc[0]['lat']
+    lon = df_scores[df_scores['name'] == selected_weather_loc].iloc[0]['lon']
+    loc_name = f"{selected_weather_loc}, {df_scores[df_scores['name'] == selected_weather_loc].iloc[0]['state']}"
+
+    if user_loc and user_loc.get('latitude'):
+        lat = user_loc['latitude']
+        lon = user_loc['longitude']
+        loc_name = "Your Exact GPS Location"
     
     # Fetch real-time data
     try:
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={loc_info['lat']}&longitude={loc_info['lon']}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=Asia/Kolkata"
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=Asia/Kolkata"
         response = requests.get(url, timeout=5)
         data = response.json()
         
         current = data.get("current", {})
         
-        st.markdown(f"### Live Conditions in {selected_weather_loc}, {loc_info['state']}")
+        st.markdown(f"### Live Conditions in {loc_name}")
         
         col_w1, col_w2, col_w3, col_w4 = st.columns(4)
         col_w1.metric("🌡️ Temperature", f"{current.get('temperature_2m', '--')} °C")
@@ -539,7 +553,7 @@ with tab2:
         col_w3.metric("💧 Humidity", f"{current.get('relative_humidity_2m', '--')} %")
         col_w4.metric("💨 Wind Speed", f"{current.get('wind_speed_10m', '--')} km/h")
         
-        st.caption(f"GPS Coordinates: {loc_info['lat']:.4f}° N, {loc_info['lon']:.4f}° E")
+        st.caption(f"GPS Coordinates: {lat:.4f}° N, {lon:.4f}° E")
     except Exception as e:
         st.error(f"Could not connect to live weather API: {e}")
 
