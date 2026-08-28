@@ -611,6 +611,7 @@ with tab3:
         fig_gauge = go.Figure(go.Indicator(
             mode = "gauge+number",
             value = loc_data['risk_probability'] * 100,
+            number = {'font': {'size': 35}}, # Make font smaller to prevent cutoff
             title = {'text': "AI Risk Probability %"},
             gauge = {
                 'axis': {'range': [0, 100]},
@@ -622,27 +623,34 @@ with tab3:
                     {'range': [80, 100], 'color': "red"}],
             }
         ))
-        fig_gauge.update_layout(height=250, margin=dict(l=10, r=10, t=40, b=10))
+        fig_gauge.update_layout(height=250, margin=dict(l=20, r=30, t=40, b=10))
         st.plotly_chart(fig_gauge, use_container_width=True)
 
     with colB:
-        st.markdown("#### Factor Influence (SHAP Values)")
-        # Dynamic Waterfall chart based on real data
-        base_val = 0.1
-        rain_ef = loc_data['rainfall_24h'] / 300.0 * 0.4
-        slope_ef = loc_data['slope'] / 90.0 * 0.3
-        moist_ef = loc_data['soil_moisture'] * 0.2
-        total_risk = base_val + rain_ef + slope_ef + moist_ef
+        st.markdown("#### Key Risk Factors")
+        # Clean Horizontal Bar Graph instead of messy waterfall
+        rain_ef = loc_data['rainfall_24h'] / 300.0 * 100
+        slope_ef = loc_data['slope'] / 90.0 * 100
+        moist_ef = loc_data['soil_moisture'] * 100
         
-        fig_waterfall = go.Figure(go.Waterfall(
-            name = "SHAP", orientation = "h",
-            measure = ["relative", "relative", "relative", "relative", "total"],
-            y = ["Base Risk", "Rainfall", "Slope", "Moisture", "Final Prediction"],
-            x = [base_val, rain_ef, slope_ef, moist_ef, total_risk],
-            connector = {"line":{"color":"rgb(63, 63, 63)"}},
-        ))
-        fig_waterfall.update_layout(height=300, margin=dict(l=10, r=10, t=30, b=10))
-        st.plotly_chart(fig_waterfall, use_container_width=True)
+        factor_df = pd.DataFrame({
+            "Factor": ["Rainfall Intensity", "Terrain Slope", "Soil Saturation"],
+            "Danger Level (%)": [rain_ef, slope_ef, moist_ef]
+        })
+        
+        fig_bar = px.bar(
+            factor_df, 
+            x="Danger Level (%)", 
+            y="Factor", 
+            orientation="h",
+            color="Danger Level (%)",
+            color_continuous_scale="Reds",
+            range_x=[0, 100]
+        )
+        
+        # Add padding to left margin so text labels fit perfectly
+        fig_bar.update_layout(height=300, margin=dict(l=110, r=20, t=20, b=40), showlegend=False)
+        st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("---")
     
