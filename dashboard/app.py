@@ -472,7 +472,7 @@ with tab4:
         # Gauge Chart for AI Confidence
         fig_gauge = go.Figure(go.Indicator(
             mode = "gauge+number",
-            value = loc_data['risk_score'] * 100,
+            value = loc_data['risk_probability'] * 100,
             title = {'text': "AI Risk Probability %"},
             gauge = {
                 'axis': {'range': [0, 100]},
