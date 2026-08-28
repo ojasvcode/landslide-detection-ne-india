@@ -47,6 +47,29 @@ except ImportError:
 
 st.set_page_config(page_title='Landslide Early Warning System', layout='wide', page_icon='🏔️')
 
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+
+if not st.session_state['logged_in']:
+    st.markdown("<h1 style='text-align: center; margin-top: 100px;'>🔒 Welcome to the Safety Portal</h1>", unsafe_allow_html=True)
+    st.markdown("<h4 style='text-align: center;'>Please log in to continue</h4>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        with st.form("login_form"):
+            username = st.text_input("Username (e.g. admin)", placeholder="admin")
+            password = st.text_input("Password", type="password", placeholder="admin123")
+            submitted = st.form_submit_button("Login", type="primary", use_container_width=True)
+            if submitted:
+                if username and password:
+                    st.session_state['logged_in'] = True
+                    st.session_state['username'] = username
+                    st.rerun()
+                else:
+                    st.error("Please enter valid credentials.")
+    st.stop()
+
+
 # --- Custom CSS ---
 
 st.markdown('''
@@ -168,11 +191,23 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
 st.sidebar.title('🏔️ Landslide Detection System')
 st.sidebar.subheader('Community Safety Portal')
 
+if st.sidebar.button("🚪 Logout", use_container_width=True):
+    st.session_state['logged_in'] = False
+    st.rerun()
+
 st.sidebar.markdown("<h3 style='text-align: center; color: red; margin-bottom: 0px;'>EMERGENCY</h3>", unsafe_allow_html=True)
 if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
     st.sidebar.error("🚨 SOS Alert Triggered!")
     st.sidebar.warning("📞 NDRF Helpline: 011-24363260\n📞 Disaster Helpline: 1078\n📞 Police: 100 | Ambulance: 108")
     play_emergency_siren()
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("**📍 Track Exact Location**")
+st.sidebar.caption("Enable for precise localized weather animations.")
+loc = streamlit_geolocation()
+if loc and loc.get('latitude'):
+    st.session_state['exact_lat'] = loc['latitude']
+    st.session_state['exact_lon'] = loc['longitude']
 
 st.sidebar.markdown("---")
 
@@ -246,11 +281,12 @@ custom_css = f'''
 st.markdown(custom_css, unsafe_allow_html=True)
 
 @st.cache_data(ttl=3600)
-def get_local_weather_emojis():
+def get_local_weather_emojis(lat=None, lon=None):
     try:
-        # Detect approximate location via IP
-        loc_data = requests.get("http://ip-api.com/json/", timeout=3).json()
-        lat, lon = loc_data['lat'], loc_data['lon']
+        if lat is None or lon is None:
+            # Detect approximate location via IP
+            loc_data = requests.get("http://ip-api.com/json/", timeout=3).json()
+            lat, lon = loc_data['lat'], loc_data['lon']
         
         # Fetch actual real-time weather from Open-Meteo
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=weathercode"
@@ -270,7 +306,9 @@ def get_local_weather_emojis():
 
 # Animated weather effect based on REAL local weather
 import random as _rnd
-weather_emojis = get_local_weather_emojis()
+lat_val = st.session_state.get('exact_lat')
+lon_val = st.session_state.get('exact_lon')
+weather_emojis = get_local_weather_emojis(lat_val, lon_val)
 rain_divs = ""
 
 # Significantly reduced emoji count (from 40 to 8) to be less distracting
