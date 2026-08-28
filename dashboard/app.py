@@ -683,18 +683,8 @@ with tab4:
             
             st.markdown("### 📍 Exact Incident Locations")
             
-            # Map plotting exact locations rather than just grouping by state
-            fig_map = px.scatter_mapbox(
-                realtime_hist_df, 
-                lat="lat", lon="lon", 
-                color="Severity", 
-                hover_name="State", 
-                hover_data=["Date", "Reporter"],
-                color_discrete_map={"Severe":"#8b0000", "High":"#dc3545", "Moderate":"#ffc107", "Minor":"#28a745"},
-                zoom=5, height=400
-            )
-            fig_map.update_layout(mapbox_style="carto-positron", margin={"r":0,"t":0,"l":0,"b":0})
-            st.plotly_chart(fig_map, use_container_width=True)
+            # Use Streamlit's robust built-in map to avoid Plotly version conflicts
+            st.map(realtime_hist_df, latitude="lat", longitude="lon", color="#ff0000", size=500, use_container_width=True)
             
             # Replace the State pie chart with Severity
             col1, col2 = st.columns([1, 1])
