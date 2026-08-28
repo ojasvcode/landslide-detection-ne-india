@@ -53,6 +53,40 @@ def get_state_risk(state_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/api/risk/geojson")
+def get_risk_geojson():
+    """Get real-time landslide risk formatted as GeoJSON for direct map integration."""
+    try:
+        scores_df = engine.score_all_stations()
+        features = []
+        for _, row in scores_df.iterrows():
+            feature = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [row["lon"], row["lat"]]
+                },
+                "properties": {
+                    "name": row["name"],
+                    "state": row["state"],
+                    "risk_level": row["risk_level"],
+                    "risk_probability": round(row["risk_probability"], 3),
+                    "rainfall_24h": row.get("rainfall_24h", 0.0),
+                    "slope": row.get("slope", 0.0)
+                }
+            }
+            features.append(feature)
+        
+        geojson = {
+            "type": "FeatureCollection",
+            "features": features
+        }
+        return geojson
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
+
     import uvicorn
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
