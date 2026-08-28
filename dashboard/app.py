@@ -184,7 +184,7 @@ with tab3:
                                      hover_name="name", hover_data=["state", "rainfall_24h"],
                                      color_continuous_scale="Blues", size_max=20, zoom=6,
                                      mapbox_style="carto-positron")
-        st.plotly_chart(fig_rain, use_container_width=True)
+            st.plotly_chart(fig_rain, use_container_width=True)
         else:
             st.warning("No data to map.")
         
@@ -196,7 +196,7 @@ with tab3:
                                      hover_name="name", hover_data=["state", "soil_moisture"],
                                      color_continuous_scale="BrBG", size_max=20, zoom=6,
                                      mapbox_style="carto-positron")
-        st.plotly_chart(fig_soil, use_container_width=True)
+            st.plotly_chart(fig_soil, use_container_width=True)
         else:
             st.warning("No data to map.")
 
