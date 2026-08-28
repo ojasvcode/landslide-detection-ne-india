@@ -120,6 +120,44 @@ filtered_df = df_scores[mask]
 
 # --- Main App ---
 
+
+def laughing_emojis():
+    # Inject CSS for falling laughing emojis
+    emoji_html = '''
+    <style>
+    @keyframes fall {
+        0% { top: -10%; transform: translateX(0px) rotate(0deg); }
+        100% { top: 110%; transform: translateX(100px) rotate(360deg); }
+    }
+    .emoji-rain {
+        position: fixed;
+        top: -10%;
+        z-index: 9999;
+        font-size: 3rem;
+        user-select: none;
+        pointer-events: none;
+        animation: fall linear forwards;
+    }
+    </style>
+    <div id="emoji-container"></div>
+    <script>
+    const emojis = ['😂', '🤣', '😆'];
+    const container = document.getElementById('emoji-container');
+    for (let i = 0; i < 30; i++) {
+        let el = document.createElement('div');
+        el.className = 'emoji-rain';
+        el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        el.style.animationDelay = (Math.random() * 2) + 's';
+        container.appendChild(el);
+    }
+    setTimeout(() => container.remove(), 5000);
+    </script>
+    '''
+    st.components.v1.html(emoji_html, height=0)
+
+
 def play_cheer():
     try:
         with open("dashboard/cheering.mp3", "rb") as f:
@@ -339,6 +377,7 @@ with tab7:
                 conn.commit()
                 st.success(f"✅ Incident reported successfully and saved to database!")
                 st.balloons()
+                laughing_emojis()
                 play_cheer()
             else:
                 st.error("Please fill in your name and a description of the incident.")
