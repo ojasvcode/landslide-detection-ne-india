@@ -471,9 +471,8 @@ def play_risk_alert(risk_level):
 
 
 
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🗺️ Local Map", 
-    "📊 Safety Check", 
     "🌧️ Weather", 
     "🤖 AI Insights", 
     "📋 Past Events", 
@@ -518,33 +517,6 @@ with tab1:
     col3.metric("Last Updated", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 with tab2:
-    st.header("📊 Area Safety Analysis")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Average Risk by State")
-        state_avg = df_scores.groupby('state')['risk_probability'].mean().reset_index()
-        fig1 = px.bar(state_avg, x='state', y='risk_probability', color='risk_probability', 
-                     color_continuous_scale='Reds', title="State Risk Averages")
-        st.plotly_chart(fig1, use_container_width=True)
-        
-    with col2:
-        st.subheader("Risk Distribution")
-        fig2 = px.histogram(df_scores, x='risk_probability', nbins=10, 
-                           title="Distribution of Risk Probabilities across Stations")
-        st.plotly_chart(fig2, use_container_width=True)
-        
-    st.subheader("Top High-Risk Locations")
-    top_risk = df_scores.nlargest(10, 'risk_probability')[['name', 'state', 'risk_level', 'risk_probability', 'rainfall_24h']]
-    
-    def highlight_risk(val):
-        color_map = {"LOW": "#28a745", "MODERATE": "#ffc107", "HIGH": "#fd7e14", "VERY_HIGH": "#dc3545", "SEVERE": "#8b0000"}
-        color = color_map.get(val, "black")
-        return f'background-color: {color}; color: white'
-        
-    st.dataframe(top_risk.style.map(highlight_risk, subset=['risk_level']), use_container_width=True)
-
-with tab3:
     st.header("🌧️ Current Weather & Rainfall")
     st.info("Live weather data fetched directly from Open-Meteo satellite APIs.")
     
@@ -593,7 +565,7 @@ with tab3:
     st.subheader("Local Sensor Data")
     st.dataframe(df_scores[['name', 'state', 'rainfall_24h', 'soil_moisture', 'slope']], use_container_width=True)
 
-with tab4:
+with tab3:
     st.header("🤖 Deep Dive: AI Risk Analysis")
     st.info("Explore exactly how the machine learning model calculates risk thresholds and makes decisions.")
     
@@ -689,7 +661,7 @@ with tab4:
         fig_cm.update_layout(height=200, margin=dict(l=10, r=10, t=10, b=10))
         st.plotly_chart(fig_cm, use_container_width=True)
 
-with tab5:
+with tab4:
     st.header("📋 History of Local Events")
     st.info("Live catalog of all reported landslide events and historical incidents.")
     
@@ -712,7 +684,7 @@ with tab5:
     except Exception as e:
         st.error(f"Could not load database records: {e}")
 
-with tab6:
+with tab5:
     st.header("🌍 Recent Earthquakes Nearby")
     st.info("Recent earthquakes in the NE region (Placeholder Data).")
     
@@ -733,7 +705,7 @@ with tab6:
         st.warning("No data to map.")
 
 
-with tab7:
+with tab6:
     st.header("📡 Live Incident & Alert Tracking")
     st.info("Monitor the status of all reported landslides and the live dispatch status of emergency response agencies.")
     
