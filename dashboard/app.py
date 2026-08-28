@@ -82,8 +82,8 @@ st.markdown('''
 
 <div class="dash-header">
     <div class="dash-header-center">
-        <p class="dash-title-main">🏔️ Landslide Risk Mitigation & Early Warning System</p>
-        <p class="dash-subtitle">Real-time Monitoring, Analysis, and Incident Reporting</p>
+        <p class="dash-title-main">🏔️ Landslide Safety & Early Warning Portal</p>
+        <p class="dash-subtitle">Keeping our communities safe with real-time monitoring and instant alerts.</p>
     </div>
 </div>
 ''', unsafe_allow_html=True)
@@ -165,10 +165,10 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
 
 # --- Sidebar ---
 st.sidebar.title('🏔️ Landslide Detection System')
-st.sidebar.subheader('Regional Monitoring Portal')
+st.sidebar.subheader('Community Safety Portal')
 
 
-st.sidebar.markdown("**Region Filter**")
+st.sidebar.markdown("**📍 Where are you checking today?**")
 region_filter = st.sidebar.radio("Select Region", ["North East India", "Outside North East", "All India"], label_visibility="collapsed")
 
 if region_filter == "North East India":
@@ -339,13 +339,13 @@ def play_risk_alert(risk_level):
 
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-    "🗺️ Risk Map", 
-    "📊 Risk Analysis", 
-    "🌧️ Weather Monitor", 
-    "🔬 Model Insights", 
-    "📋 Landslide Inventory", 
-    "🌍 Seismic Activity",
-    "🆘 Report & Emergency Alerts"
+    "🗺️ Local Map", 
+    "📊 Safety Check", 
+    "🌧️ Weather", 
+    "🤖 AI Insights", 
+    "📋 Past Events", 
+    "🌍 Earthquakes",
+    "🆘 Need Help?"
 ])
 
 def get_color(level):
@@ -353,7 +353,7 @@ def get_color(level):
     return colors.get(level, "gray")
 
 with tab1:
-    st.header("Real-time Landslide Risk Map")
+    st.header("🗺️ See What's Happening in Your Area")
     
     m = Map(location=[26.0, 92.5], zoom_start=7)
     TileLayer('CartoDB positron').add_to(m)
@@ -385,7 +385,7 @@ with tab1:
     col3.metric("Last Updated", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 with tab2:
-    st.header("Risk Analysis Dashboard")
+    st.header("📊 Area Safety Analysis")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -412,7 +412,7 @@ with tab2:
     st.dataframe(top_risk.style.map(highlight_risk, subset=['risk_level']), use_container_width=True)
 
 with tab3:
-    st.header("Weather Monitor")
+    st.header("🌧️ Current Weather & Rainfall")
     st.info("Weather data fetched from monitoring APIs.")
     
     col1, col2 = st.columns(2)
@@ -436,7 +436,7 @@ with tab3:
     st.dataframe(df_scores[['name', 'state', 'rainfall_24h', 'soil_moisture', 'slope']], use_container_width=True)
 
 with tab4:
-    st.header("Model Insights")
+    st.header("🤖 How Our AI Understands Risk")
     st.info("Explaining the predictions of the ML model.")
     
     col1, col2 = st.columns(2)
@@ -471,7 +471,7 @@ with tab4:
     st.plotly_chart(fig, use_container_width=True)
 
 with tab5:
-    st.header("Landslide Inventory")
+    st.header("📋 History of Local Events")
     st.info("Historical catalog of landslide events.")
     
     # Dummy historical data
@@ -489,7 +489,7 @@ with tab5:
     st.plotly_chart(fig_hist)
 
 with tab6:
-    st.header("Seismic Activity")
+    st.header("🌍 Recent Earthquakes Nearby")
     st.info("Recent earthquakes in the NE region (Placeholder Data).")
     
     seismic_data = pd.DataFrame({
@@ -510,7 +510,7 @@ with tab6:
 
 
 with tab7:
-    st.header("Report a Landslide Incident")
+    st.header("🆘 How Can We Help? Report an Incident")
     st.info("Use this form to register a new landslide event into the system database.")
     
     st.subheader("📍 Get Current Location")
@@ -601,14 +601,14 @@ with tab7:
                 c.execute("INSERT INTO incidents (name, date, state, lat, lon, severity, description) VALUES (?, ?, ?, ?, ?, ?, ?)",
                           (reporter_name, str(incident_date), incident_state, lat, lon, severity, description))
                 conn.commit()
-                st.success(f"✅ Incident reported successfully and saved to database!")
+                st.success(f"✅ Thank you for letting us know, {reporter_name}! Help is on the way. Please stay safe.")
                 
                 # Emergency alert notification
                 alert_html = f'''
                 <div style="background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%); 
                      border-radius: 12px; padding: 20px; margin: 10px 0; color: white; 
                      border: 2px solid #ff6666; box-shadow: 0 4px 15px rgba(255,0,0,0.3);">
-                    <h3 style="margin:0; color:white;">🚨 EMERGENCY ALERT DISPATCHED</h3>
+                    <h3 style="margin:0; color:white;">🚨 HELP IS ON THE WAY</h3>
                     <hr style="border-color: rgba(255,255,255,0.3);">
                     <p style="margin:5px 0;"><strong>📍 Location:</strong> {incident_state} ({lat:.4f}, {lon:.4f})</p>
                     <p style="margin:5px 0;"><strong>📅 Date:</strong> {incident_date}</p>
@@ -644,7 +644,7 @@ with tab7:
         # Also plot on a map
         st.map(recent_incidents, latitude="lat", longitude="lon", color="#ff0000", size=50)
     else:
-        st.write("No incidents reported yet.")
+        st.write("No incidents reported recently. Stay safe!")
     
     st.markdown("---")
     st.subheader("📡 Emergency Alert History")
@@ -653,8 +653,8 @@ with tab7:
         if not all_alerts.empty:
             st.dataframe(all_alerts, use_container_width=True)
         else:
-            st.write("No emergency alerts dispatched yet.")
+            st.write("No emergencies reported in your area. Everything is quiet for now.")
     except Exception:
-        st.write("No emergency alerts dispatched yet.")
+        st.write("No emergencies reported in your area. Everything is quiet for now.")
 
 
