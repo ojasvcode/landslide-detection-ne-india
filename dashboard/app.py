@@ -255,7 +255,8 @@ for i in range(60):
     is_emoji = _rnd.choice([True, False, False]) # 33% chance to be an emoji
     
     if is_emoji:
-        rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">😂</div>'
+        emoji_char = _rnd.choice(['😂', '🐍', '🐍😂'])
+        rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{emoji_char}</div>'
     else:
         rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
 st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
