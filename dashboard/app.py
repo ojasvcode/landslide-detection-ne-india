@@ -122,40 +122,34 @@ filtered_df = df_scores[mask]
 
 
 def laughing_emojis():
-    # Inject CSS for falling laughing emojis
-    emoji_html = '''
+    import random
+    emojis_list = ['😂', '🤣', '😆']
+    divs = ""
+    for i in range(30):
+        e = random.choice(emojis_list)
+        left = random.uniform(0, 95)
+        dur = random.uniform(2, 4)
+        delay = random.uniform(0, 2)
+        divs += f'<div class="emoji-rain" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{e}</div>'
+    emoji_html = f'''
     <style>
-    @keyframes fall {
-        0% { top: -10%; transform: translateX(0px) rotate(0deg); }
-        100% { top: 110%; transform: translateX(100px) rotate(360deg); }
-    }
-    .emoji-rain {
+    @keyframes emoji-fall {{
+        0% {{ top: -10vh; opacity: 1; transform: rotate(0deg); }}
+        100% {{ top: 100vh; opacity: 0; transform: rotate(360deg); }}
+    }}
+    .emoji-rain {{
         position: fixed;
-        top: -10%;
-        z-index: 9999;
-        font-size: 3rem;
+        top: -10vh;
+        z-index: 999999;
+        font-size: 2.5rem;
         user-select: none;
         pointer-events: none;
-        animation: fall linear forwards;
-    }
+        animation: emoji-fall linear forwards;
+    }}
     </style>
-    <div id="emoji-container"></div>
-    <script>
-    const emojis = ['😂', '🤣', '😆'];
-    const container = document.getElementById('emoji-container');
-    for (let i = 0; i < 30; i++) {
-        let el = document.createElement('div');
-        el.className = 'emoji-rain';
-        el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
-        el.style.left = Math.random() * 100 + 'vw';
-        el.style.animationDuration = (Math.random() * 2 + 2) + 's';
-        el.style.animationDelay = (Math.random() * 2) + 's';
-        container.appendChild(el);
-    }
-    setTimeout(() => container.remove(), 5000);
-    </script>
+    {divs}
     '''
-    st.components.v1.html(emoji_html, height=0)
+    st.markdown(emoji_html, unsafe_allow_html=True)
 
 
 def play_cheer():
