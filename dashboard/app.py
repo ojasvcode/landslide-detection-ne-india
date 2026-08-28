@@ -226,6 +226,12 @@ custom_css = f'''
     border-radius: 0 0 2px 2px;
     animation: rainDrop linear infinite;
 }}
+.emoji-drop {{
+    position: absolute;
+    top: -5vh;
+    font-size: 24px;
+    animation: rainDrop linear infinite;
+}}
 
 /* Alert sound indicator */
 .risk-pulse {{
@@ -239,14 +245,19 @@ custom_css = f'''
 '''
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Animated weather rain effect
+# Animated weather rain and emoji effect
 import random as _rnd
 rain_divs = ""
-for i in range(40):
+for i in range(60):
     left = _rnd.uniform(0, 100)
-    dur = _rnd.uniform(1.5, 3.5)
+    dur = _rnd.uniform(1.5, 4.5)
     delay = _rnd.uniform(0, 3)
-    rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
+    is_emoji = _rnd.choice([True, False, False]) # 33% chance to be an emoji
+    
+    if is_emoji:
+        rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">😂</div>'
+    else:
+        rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
 st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
 
 
