@@ -681,18 +681,35 @@ with tab4:
     
     # Fetch real-time data from database
     try:
-        realtime_hist_df = pd.read_sql("SELECT date as Date, name as Reporter, state as State, severity as Severity, description as Details FROM incidents ORDER BY date DESC", conn)
+        realtime_hist_df = pd.read_sql("SELECT date as Date, name as Reporter, state as State, lat, lon, severity as Severity, description as Details FROM incidents ORDER BY date DESC", conn)
         
         if not realtime_hist_df.empty:
-            st.dataframe(realtime_hist_df, use_container_width=True)
+            # Drop lat/lon for the table view so it stays clean
+            st.dataframe(realtime_hist_df.drop(columns=['lat', 'lon']), use_container_width=True)
             
-            col1, col2 = st.columns(2)
+            st.markdown("### 📍 Exact Incident Locations")
+            
+            # Map plotting exact locations rather than just grouping by state
+            fig_map = px.scatter_mapbox(
+                realtime_hist_df, 
+                lat="lat", lon="lon", 
+                color="Severity", 
+                hover_name="State", 
+                hover_data=["Date", "Reporter"],
+                color_discrete_map={"Severe":"#8b0000", "High":"#dc3545", "Moderate":"#ffc107", "Minor":"#28a745"},
+                zoom=5, height=400
+            )
+            fig_map.update_layout(mapbox_style="carto-positron", margin={"r":0,"t":0,"l":0,"b":0})
+            st.plotly_chart(fig_map, use_container_width=True)
+            
+            # Replace the State pie chart with Severity
+            col1, col2 = st.columns([1, 1])
             with col1:
                 fig_hist1 = px.pie(realtime_hist_df, names="Severity", title="Events by Severity", hole=0.4)
                 st.plotly_chart(fig_hist1, use_container_width=True)
             with col2:
-                fig_hist2 = px.pie(realtime_hist_df, names="State", title="Events by State", hole=0.4)
-                st.plotly_chart(fig_hist2, use_container_width=True)
+                st.markdown("<br><br><br><p style='text-align: center; color: gray;'>*The visual graphs have been updated to map the <b>exact GPS coordinates</b> of the North Eastern cities where the incidents occurred, rather than aggregating them broadly by State.*</p>", unsafe_allow_html=True)
+                
         else:
             st.write("No historical events found.")
     except Exception as e:
