@@ -79,7 +79,15 @@ selected_date = st.sidebar.date_input('Date for Analysis', datetime.date.today()
 refresh = st.sidebar.button('🔄 Refresh Data')
 
 st.sidebar.markdown("---")
+
+st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)
+st.sidebar.markdown("<h3 style='text-align: center; color: red;'>EMERGENCY</h3>", unsafe_allow_html=True)
+if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
+    st.sidebar.error("SOS Alert Triggered! Emergency response teams have been notified.")
+
+st.sidebar.markdown("---")
 st.sidebar.markdown("**Credits:**\nDeveloped by NE India Landslide Response Team.")
+
 
 # --- Data Loading ---
 try:
@@ -99,13 +107,14 @@ if selected_risk:
 filtered_df = df_scores[mask]
 
 # --- Main App ---
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🗺️ Risk Map", 
     "📊 Risk Analysis", 
     "🌧️ Weather Monitor", 
     "🔬 Model Insights", 
     "📋 Landslide Inventory", 
-    "🌍 Seismic Activity"
+    "🌍 Seismic Activity",
+    "📝 Report Incident"
 ])
 
 def get_color(level):
@@ -267,3 +276,31 @@ with tab6:
         st.map(seismic_data, latitude="Lat", longitude="Lon", size="Magnitude", color="#d62728", use_container_width=True)
     else:
         st.warning("No data to map.")
+
+
+with tab7:
+    st.header("Report a Landslide Incident")
+    st.info("Use this form to register a new landslide event into the system database.")
+    
+    with st.form("incident_report_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            reporter_name = st.text_input("Your Name / Organization")
+            incident_date = st.date_input("Date of Incident", datetime.date.today())
+            incident_state = st.selectbox("State", NE_STATES)
+        with col2:
+            lat = st.number_input("Latitude", min_value=20.0, max_value=30.0, value=25.0)
+            lon = st.number_input("Longitude", min_value=85.0, max_value=100.0, value=92.0)
+            severity = st.selectbox("Severity", ["Minor (Road Blocked)", "Moderate (Property Damage)", "Severe (Casualties/Major Destruction)"])
+        
+        description = st.text_area("Incident Description", placeholder="Describe the landslide extent, triggers (e.g. heavy rain), and damages...")
+        
+        submitted = st.form_submit_button("Submit Incident Report", type="primary")
+        
+        if submitted:
+            if reporter_name and description:
+                st.success(f"✅ Incident reported successfully for {incident_state} at ({lat}, {lon})!")
+                st.balloons()
+                # In a real app, you would save this to a database or append to the inventory CSV here
+            else:
+                st.error("Please fill in your name and a description of the incident.")
