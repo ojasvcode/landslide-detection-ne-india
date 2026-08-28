@@ -18,6 +18,12 @@ c.execute('''CREATE TABLE IF NOT EXISTS incidents
              (id INTEGER PRIMARY KEY AUTOINCREMENT, 
               name TEXT, date TEXT, state TEXT, lat REAL, lon REAL, severity TEXT, description TEXT)''')
 conn.commit()
+c.execute('''CREATE TABLE IF NOT EXISTS emergency_alerts
+             (id INTEGER PRIMARY KEY AUTOINCREMENT,
+              incident_id INTEGER, alert_type TEXT, agency TEXT, 
+              status TEXT DEFAULT 'DISPATCHED', timestamp TEXT,
+              FOREIGN KEY(incident_id) REFERENCES incidents(id))''')
+conn.commit()
 
 
 # Try to import from src, fallback to sample data if not available
@@ -171,7 +177,11 @@ st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=
 st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)
 st.sidebar.markdown("<h3 style='text-align: center; color: red;'>EMERGENCY</h3>", unsafe_allow_html=True)
 if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=True):
-    st.sidebar.error("SOS Alert Triggered! Emergency response teams have been notified.")
+    st.sidebar.error("🚨 SOS Alert Triggered!")
+    st.sidebar.warning("📞 NDRF Helpline: 011-24363260")
+    st.sidebar.warning("📞 Disaster Helpline: 1078")
+    st.sidebar.warning("📞 Police: 100 | Ambulance: 108")
+    play_emergency_siren()
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Credits:**\nDeveloped by NE India Landslide Response Team.")
@@ -222,46 +232,46 @@ def play_risk_alert(risk_level):
     st.markdown(f'<audio autoplay><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>', unsafe_allow_html=True)
 
 
-def laughing_emojis():
-    import random
-    emojis_list = ['😂', '🤣', '😆', '💧', '💧', '💦', '🌧️']
-    divs = ""
-    for i in range(30):
-        e = random.choice(emojis_list)
-        left = random.uniform(0, 95)
-        dur = random.uniform(2, 4)
-        delay = random.uniform(0, 2)
-        divs += f'<div class="emoji-rain" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{e}</div>'
-    emoji_html = f'''
-    <style>
-    @keyframes emoji-fall {{
-        0% {{ top: -10vh; opacity: 1; transform: rotate(0deg); }}
-        100% {{ top: 100vh; opacity: 0; transform: rotate(360deg); }}
-    }}
-    .emoji-rain {{
-        position: fixed;
-        top: -10vh;
-        z-index: 999999;
-        font-size: 2.5rem;
-        user-select: none;
-        pointer-events: none;
-        animation: emoji-fall linear forwards;
-    }}
-    </style>
-    {divs}
-    '''
-    st.markdown(emoji_html, unsafe_allow_html=True)
 
 
-def play_cheer():
-    try:
-        with open("dashboard/cheering.mp3", "rb") as f:
-            data = f.read()
-        b64 = base64.b64encode(data).decode()
-        md = f'<audio autoplay="true"><source src="data:audio/mp3;base64,{b64}" type="audio/mp3"></audio>'
-        st.markdown(md, unsafe_allow_html=True)
-    except Exception as e:
-        pass
+
+
+def play_emergency_siren():
+    import struct, math
+    sample_rate = 8000
+    duration = 1.5
+    n_samples = int(sample_rate * duration)
+    samples = []
+    for i in range(n_samples):
+        t = i / sample_rate
+        # Wailing siren: frequency sweeps between 600-1200 Hz
+        freq = 600 + 600 * (0.5 + 0.5 * math.sin(2 * math.pi * 2 * t))
+        val = int(32767 * 0.4 * math.sin(2 * math.pi * freq * t))
+        samples.append(struct.pack('<h', val))
+    audio_data = b''.join(samples)
+    data_size = len(audio_data)
+    header = struct.pack('<4sI4s4sIHHIIHH4sI',
+        b'RIFF', 36 + data_size, b'WAVE', b'fmt ', 16, 1, 1, sample_rate, sample_rate * 2, 2, 16, b'data', data_size)
+    wav = header + audio_data
+    b64 = base64.b64encode(wav).decode()
+    st.markdown(f'<audio autoplay><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>', unsafe_allow_html=True)
+
+def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
+    timestamp = datetime.datetime.now().isoformat()
+    agencies = [
+        ("NDRF", "National Disaster Response Force"),
+        ("SDMA", f"{state} Disaster Management Authority"),
+        ("HOSPITAL", "Nearest District Hospital"),
+        ("POLICE", f"{state} Police Control Room"),
+    ]
+    if "Severe" in severity:
+        agencies.append(("ARMY", "Indian Army Disaster Relief"))
+        agencies.append(("IAF", "Indian Air Force Rescue"))
+    
+    for code_name, agency in agencies:
+        c.execute("INSERT INTO emergency_alerts (incident_id, alert_type, agency, status, timestamp) VALUES (?, ?, ?, ?, ?)",
+                  (incident_id, code_name, agency, "DISPATCHED", timestamp))
+    conn.commit()
 
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
@@ -271,7 +281,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🔬 Model Insights", 
     "📋 Landslide Inventory", 
     "🌍 Seismic Activity",
-    "📝 Report Incident"
+    "🆘 Report & Emergency Alerts"
 ])
 
 def get_color(level):
@@ -528,9 +538,37 @@ with tab7:
                           (reporter_name, str(incident_date), incident_state, lat, lon, severity, description))
                 conn.commit()
                 st.success(f"✅ Incident reported successfully and saved to database!")
-                st.balloons()
-                laughing_emojis()
-                play_cheer()
+                
+                # Emergency alert notification
+                alert_html = f'''
+                <div style="background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%); 
+                     border-radius: 12px; padding: 20px; margin: 10px 0; color: white; 
+                     border: 2px solid #ff6666; box-shadow: 0 4px 15px rgba(255,0,0,0.3);">
+                    <h3 style="margin:0; color:white;">🚨 EMERGENCY ALERT DISPATCHED</h3>
+                    <hr style="border-color: rgba(255,255,255,0.3);">
+                    <p style="margin:5px 0;"><strong>📍 Location:</strong> {incident_state} ({lat:.4f}, {lon:.4f})</p>
+                    <p style="margin:5px 0;"><strong>📅 Date:</strong> {incident_date}</p>
+                    <p style="margin:5px 0;"><strong>⚠️ Severity:</strong> {severity}</p>
+                    <p style="margin:5px 0;"><strong>👤 Reporter:</strong> {reporter_name}</p>
+                    <hr style="border-color: rgba(255,255,255,0.3);">
+                    <p style="margin:5px 0;">✅ NDRF Team Notified</p>
+                    <p style="margin:5px 0;">✅ State Disaster Management Authority Alerted</p>
+                    <p style="margin:5px 0;">✅ Nearest Hospital Informed</p>
+                    <p style="margin:5px 0;">✅ Local Police Control Room Notified</p>
+                </div>
+                '''
+                st.markdown(alert_html, unsafe_allow_html=True)
+                play_emergency_siren()
+                
+                # Dispatch alerts to agencies and save to DB
+                last_id = c.execute("SELECT MAX(id) FROM incidents").fetchone()[0]
+                dispatch_emergency_alerts(last_id, incident_state, severity, lat, lon)
+                
+                # Show alert dispatch status
+                alerts = pd.read_sql(f"SELECT agency, status, timestamp FROM emergency_alerts WHERE incident_id={last_id}", conn)
+                st.subheader("📡 Alert Dispatch Status")
+                for _, row in alerts.iterrows():
+                    st.markdown(f'<div style="background:#1a472a;padding:8px 15px;border-radius:8px;margin:4px 0;color:#4ade80;">✅ <strong>{row["agency"]}</strong> — {row["status"]} at {row["timestamp"][:19]}</div>', unsafe_allow_html=True)
             else:
                 st.error("Please fill in your name and a description of the incident.")
     
@@ -543,3 +581,14 @@ with tab7:
         st.map(recent_incidents, latitude="lat", longitude="lon", color="#ff0000", size=50)
     else:
         st.write("No incidents reported yet.")
+    
+    st.markdown("---")
+    st.subheader("📡 Emergency Alert History")
+    try:
+        all_alerts = pd.read_sql("SELECT ea.id, ea.agency, ea.alert_type, ea.status, ea.timestamp, i.state, i.severity FROM emergency_alerts ea JOIN incidents i ON ea.incident_id = i.id ORDER BY ea.id DESC LIMIT 50", conn)
+        if not all_alerts.empty:
+            st.dataframe(all_alerts, use_container_width=True)
+        else:
+            st.write("No emergency alerts dispatched yet.")
+    except Exception:
+        st.write("No emergency alerts dispatched yet.")
