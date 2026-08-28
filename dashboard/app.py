@@ -245,20 +245,43 @@ custom_css = f'''
 '''
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Animated weather rain and emoji effect
+@st.cache_data(ttl=3600)
+def get_local_weather_emojis():
+    try:
+        # Detect approximate location via IP
+        loc_data = requests.get("http://ip-api.com/json/", timeout=3).json()
+        lat, lon = loc_data['lat'], loc_data['lon']
+        
+        # Fetch actual real-time weather from Open-Meteo
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=weathercode"
+        resp = requests.get(url, timeout=3).json()
+        code = resp['current']['weathercode']
+        
+        # WMO Weather interpretation codes
+        if code == 0: return ['☀️', '🌞', '✨'] # Clear
+        if code in [1,2]: return ['⛅', '🌤️', '🍃'] # Partly cloudy
+        if code == 3: return ['☁️', '🌥️', '☁️'] # Overcast
+        if code in [51,53,55,61,63,65,80,81,82]: return ['🌧️', '💧', '☔'] # Rain
+        if code in [71,73,75,85,86]: return ['❄️', '🌨️', '⛄'] # Snow
+        if code in [95,96,99]: return ['⛈️', '⚡', '🌩️'] # Thunderstorm
+        return ['☁️', '🌫️']
+    except:
+        return ['🌧️', '💧'] # Fallback
+
+# Animated weather effect based on REAL local weather
 import random as _rnd
+weather_emojis = get_local_weather_emojis()
 rain_divs = ""
-for i in range(60):
+
+for i in range(40):
     left = _rnd.uniform(0, 100)
-    dur = _rnd.uniform(1.5, 4.5)
-    delay = _rnd.uniform(0, 3)
-    is_emoji = _rnd.choice([True, False, False]) # 33% chance to be an emoji
+    # Make sunny/cloudy animations float slower, rain/storms fall faster
+    dur = _rnd.uniform(4.5, 12.0) if '☀️' in weather_emojis or '☁️' in weather_emojis else _rnd.uniform(1.5, 4.5)
+    delay = _rnd.uniform(0, 5)
     
-    if is_emoji:
-        emoji_char = _rnd.choice(['😂', '🐍', '🐍😂', '💩', '💩😂'])
-        rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{emoji_char}</div>'
-    else:
-        rain_divs += f'<div class="rain-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;"></div>'
+    emoji_char = _rnd.choice(weather_emojis)
+    rain_divs += f'<div class="emoji-drop" style="left:{left}vw;animation-duration:{dur}s;animation-delay:{delay}s;">{emoji_char}</div>'
+
 st.markdown(f'<div class="rain-container">{rain_divs}</div>', unsafe_allow_html=True)
 
 
