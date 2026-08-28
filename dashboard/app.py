@@ -345,17 +345,48 @@ with tab7:
     default_lon = 92.0
     detected_state = None
     
-    # State bounding boxes for auto-detection
+    # State bounding boxes for auto-detection (all Indian states + UTs)
     STATE_BOUNDS = {
+        "Andhra Pradesh": (12.4, 19.9, 76.7, 84.8),
         "Arunachal Pradesh": (26.5, 29.5, 91.5, 97.5),
         "Assam": (24.0, 28.0, 89.5, 96.5),
+        "Bihar": (24.2, 27.5, 83.3, 88.2),
+        "Chhattisgarh": (17.8, 24.1, 80.2, 84.4),
+        "Goa": (14.9, 15.8, 73.6, 74.3),
+        "Gujarat": (20.1, 24.7, 68.2, 74.5),
+        "Haryana": (27.6, 30.9, 74.5, 77.6),
+        "Himachal Pradesh": (30.4, 33.3, 75.6, 79.0),
+        "Jharkhand": (21.9, 25.3, 83.3, 87.9),
+        "Karnataka": (11.6, 18.5, 74.0, 78.6),
+        "Kerala": (8.2, 12.8, 74.8, 77.4),
+        "Madhya Pradesh": (21.1, 26.9, 74.0, 82.8),
+        "Maharashtra": (15.6, 22.0, 72.6, 80.9),
         "Manipur": (23.8, 25.7, 93.0, 94.8),
         "Meghalaya": (25.0, 26.2, 89.8, 92.8),
         "Mizoram": (21.9, 24.5, 92.2, 93.5),
         "Nagaland": (25.2, 27.0, 93.3, 95.3),
+        "Odisha": (17.8, 22.6, 81.3, 87.5),
+        "Punjab": (29.5, 32.5, 73.9, 76.9),
+        "Rajasthan": (23.0, 30.2, 69.5, 78.3),
         "Sikkim": (27.0, 28.2, 88.0, 89.0),
+        "Tamil Nadu": (8.0, 13.6, 76.2, 80.4),
+        "Telangana": (15.8, 19.9, 77.2, 81.3),
         "Tripura": (22.9, 24.5, 91.1, 92.4),
+        "Uttar Pradesh": (23.9, 30.4, 77.1, 84.6),
+        "Uttarakhand": (28.7, 31.5, 77.6, 81.0),
+        "West Bengal": (21.5, 27.2, 86.0, 89.9),
+        "Delhi": (28.4, 28.9, 76.8, 77.4),
+        "Jammu & Kashmir": (32.2, 37.1, 73.3, 80.3),
+        "Ladakh": (32.5, 37.0, 75.5, 80.3),
+        "Chandigarh": (30.6, 30.8, 76.7, 76.9),
+        "Puducherry": (10.7, 12.0, 79.6, 80.0),
+        "Andaman & Nicobar": (6.7, 13.7, 92.2, 94.3),
+        "Lakshadweep": (8.2, 12.5, 71.7, 74.0),
+        "Dadra & Nagar Haveli": (20.0, 20.4, 72.9, 73.3),
+        "Daman & Diu": (20.3, 20.8, 70.8, 73.0),
     }
+    
+    ALL_STATES = sorted(STATE_BOUNDS.keys())
     
     def detect_state(lat, lon):
         for state, (min_lat, max_lat, min_lon, max_lon) in STATE_BOUNDS.items():
@@ -370,16 +401,16 @@ with tab7:
         if detected_state:
             st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — Detected State: **{detected_state}**")
         else:
-            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — (Outside NE India)")
+            st.success(f"📍 Location captured! Lat: {default_lat:.4f}, Lon: {default_lon:.4f} — (Outside India)")
     
-    default_state_idx = NE_STATES.index(detected_state) if detected_state and detected_state in NE_STATES else 0
+    default_state_idx = ALL_STATES.index(detected_state) if detected_state and detected_state in ALL_STATES else 0
     
     with st.form("incident_report_form"):
         col1, col2 = st.columns(2)
         with col1:
             reporter_name = st.text_input("Your Name / Organization")
             incident_date = st.date_input("Date of Incident", datetime.date.today())
-            incident_state = st.selectbox("State", NE_STATES, index=default_state_idx)
+            incident_state = st.selectbox("State", ALL_STATES, index=default_state_idx)
         with col2:
             lat = st.number_input("Latitude", min_value=-90.0, max_value=90.0, value=default_lat, format="%.6f")
             lon = st.number_input("Longitude", min_value=-180.0, max_value=180.0, value=default_lon, format="%.6f")
