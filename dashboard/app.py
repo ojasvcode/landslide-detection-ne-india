@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 import numpy as np
 import datetime
 import sqlite3
@@ -413,11 +414,36 @@ with tab2:
 
 with tab3:
     st.header("🌧️ Current Weather & Rainfall")
-    st.info("Weather data fetched from monitoring APIs.")
+    st.info("Live weather data fetched directly from Open-Meteo satellite APIs.")
+    
+    selected_weather_loc = st.selectbox("📍 Select Location for Live Weather", df_scores['name'].tolist(), key="weather_loc")
+    loc_info = df_scores[df_scores['name'] == selected_weather_loc].iloc[0]
+    
+    # Fetch real-time data
+    try:
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={loc_info['lat']}&longitude={loc_info['lon']}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&timezone=Asia/Kolkata"
+        response = requests.get(url, timeout=5)
+        data = response.json()
+        
+        current = data.get("current", {})
+        
+        st.markdown(f"### Live Conditions in {selected_weather_loc}, {loc_info['state']}")
+        
+        col_w1, col_w2, col_w3, col_w4 = st.columns(4)
+        col_w1.metric("🌡️ Temperature", f"{current.get('temperature_2m', '--')} °C")
+        col_w2.metric("🌧️ Precipitation", f"{current.get('precipitation', '--')} mm")
+        col_w3.metric("💧 Humidity", f"{current.get('relative_humidity_2m', '--')} %")
+        col_w4.metric("💨 Wind Speed", f"{current.get('wind_speed_10m', '--')} km/h")
+        
+        st.caption(f"GPS Coordinates: {loc_info['lat']:.4f}° N, {loc_info['lon']:.4f}° E")
+    except Exception as e:
+        st.error(f"Could not connect to live weather API: {e}")
+
+    st.markdown("---")
     
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Current Rainfall")
+        st.subheader("Regional Rainfall Distribution (24h)")
         if not filtered_df.empty:
             filtered_df["rainfall_24h"] = pd.to_numeric(filtered_df["rainfall_24h"], errors="coerce").fillna(0)
             st.map(filtered_df, latitude="lat", longitude="lon", size="rainfall_24h", color="#1f77b4", use_container_width=True)
@@ -425,14 +451,14 @@ with tab3:
             st.warning("No data to map.")
         
     with col2:
-        st.subheader("Soil Moisture Levels")
+        st.subheader("Regional Soil Moisture Levels")
         if not filtered_df.empty:
             filtered_df["soil_moisture"] = pd.to_numeric(filtered_df["soil_moisture"], errors="coerce").fillna(0)
             st.map(filtered_df, latitude="lat", longitude="lon", size="soil_moisture", color="#8c564b", use_container_width=True)
         else:
             st.warning("No data to map.")
 
-    st.subheader("Raw Weather Data")
+    st.subheader("Local Sensor Data")
     st.dataframe(df_scores[['name', 'state', 'rainfall_24h', 'soil_moisture', 'slope']], use_container_width=True)
 
 with tab4:
