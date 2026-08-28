@@ -472,21 +472,26 @@ with tab4:
 
 with tab5:
     st.header("📋 History of Local Events")
-    st.info("Historical catalog of landslide events.")
+    st.info("Live catalog of all reported landslide events and historical incidents.")
     
-    # Dummy historical data
-    hist_data = pd.DataFrame({
-        "Date": ["2023-06-15", "2023-07-02", "2022-08-14", "2021-06-25"],
-        "Location": ["Dimapur", "Tawang", "Cherrapunji", "Silchar"],
-        "State": ["Nagaland", "Arunachal Pradesh", "Meghalaya", "Assam"],
-        "Trigger": ["Heavy Rain", "Heavy Rain", "Extreme Rain", "Earthquake"],
-        "Severity": ["High", "Medium", "Severe", "High"]
-    })
-    
-    st.dataframe(hist_data, use_container_width=True)
-    
-    fig_hist = px.pie(hist_data, names="Trigger", title="Events by Trigger Type")
-    st.plotly_chart(fig_hist)
+    # Fetch real-time data from database
+    try:
+        realtime_hist_df = pd.read_sql("SELECT date as Date, name as Reporter, state as State, severity as Severity, description as Details FROM incidents ORDER BY date DESC", conn)
+        
+        if not realtime_hist_df.empty:
+            st.dataframe(realtime_hist_df, use_container_width=True)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                fig_hist1 = px.pie(realtime_hist_df, names="Severity", title="Events by Severity", hole=0.4)
+                st.plotly_chart(fig_hist1, use_container_width=True)
+            with col2:
+                fig_hist2 = px.pie(realtime_hist_df, names="State", title="Events by State", hole=0.4)
+                st.plotly_chart(fig_hist2, use_container_width=True)
+        else:
+            st.write("No historical events found.")
+    except Exception as e:
+        st.error(f"Could not load database records: {e}")
 
 with tab6:
     st.header("🌍 Recent Earthquakes Nearby")
