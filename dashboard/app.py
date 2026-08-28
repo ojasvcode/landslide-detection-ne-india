@@ -347,7 +347,7 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     "🤖 AI Insights", 
     "📋 Past Events", 
     "🌍 Earthquakes",
-    "🆘 Need Help?"
+    "📝 Submit Report"
 ])
 
 def get_color(level):
@@ -603,7 +603,7 @@ with tab6:
 
 
 with tab7:
-    st.header("🆘 How Can We Help? Report an Incident")
+    st.header("📝 Submit Incident Report")
     st.info("Use this form to register a new landslide event into the system database.")
     
     st.subheader("📍 Get Current Location")
