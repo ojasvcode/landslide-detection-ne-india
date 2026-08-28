@@ -198,7 +198,19 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
 st.sidebar.image('https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg', width=50)
 st.sidebar.markdown('**Government of India**<br><span style="color:#000066; font-weight:bold;">NDMA Early Warning System</span>', unsafe_allow_html=True)
 
-selected_states = st.sidebar.multiselect('Select States', NE_STATES, default=NE_STATES)
+
+st.sidebar.markdown("**Region Filter**")
+region_filter = st.sidebar.radio("Select Region", ["North East India", "Outside North East", "All India"], label_visibility="collapsed")
+
+if region_filter == "North East India":
+    available_states = NE_STATES
+elif region_filter == "Outside North East":
+    available_states = NON_NE_STATES
+else:
+    available_states = ALL_STATES
+
+selected_states = st.sidebar.multiselect('Select States', available_states, default=available_states)
+
 selected_risk = st.sidebar.multiselect('Risk Level', ["LOW", "MODERATE", "HIGH", "VERY_HIGH", "SEVERE"], default=["HIGH", "VERY_HIGH", "SEVERE"])
 selected_date = st.sidebar.date_input('Date for Analysis', datetime.date.today())
 

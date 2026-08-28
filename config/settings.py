@@ -10,10 +10,23 @@ NE_INDIA_BBOX = {
 
 GRID_RESOLUTION = 0.1
 
+
 NE_STATES = [
     'Arunachal Pradesh', 'Assam', 'Manipur', 'Meghalaya', 
     'Mizoram', 'Nagaland', 'Sikkim', 'Tripura'
 ]
+
+ALL_STATES = [
+    "Andaman & Nicobar", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+    "Chandigarh", "Chhattisgarh", "Dadra & Nagar Haveli", "Daman & Diu", "Delhi", 
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu & Kashmir", "Jharkhand", 
+    "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", 
+    "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", 
+    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", 
+    "Uttarakhand", "West Bengal"
+]
+
+NON_NE_STATES = [s for s in ALL_STATES if s not in NE_STATES]
 
 API_ENDPOINTS = {
     'open_meteo': 'https://api.open-meteo.com/v1/forecast',
