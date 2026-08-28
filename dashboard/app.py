@@ -275,6 +275,6 @@ with tab6:
         fig_quake = px.scatter_mapbox(seismic_data, lat="Lat", lon="Lon", size="Magnitude", color="Magnitude",
                                   hover_name="Location", color_continuous_scale="Reds", size_max=15, zoom=6,
                                   mapbox_style="carto-positron", title="Recent Earthquakes")
-    st.plotly_chart(fig_quake, use_container_width=True)
+        st.plotly_chart(fig_quake, use_container_width=True)
     else:
         st.warning("No data to map.")
