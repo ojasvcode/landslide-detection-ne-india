@@ -44,77 +44,46 @@ except ImportError:
     NE_STATES = ["Arunachal Pradesh", "Assam", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Sikkim", "Tripura"]
     RiskScoringEngine = None
 
-st.set_page_config(page_title='NLRMP | NDMA, Government of India', layout='wide', page_icon='🇮🇳')
+st.set_page_config(page_title='Landslide Early Warning System', layout='wide', page_icon='🏔️')
 
 # --- Custom CSS ---
 
 st.markdown('''
 <style>
-/* Government Header Styling */
-.gov-header {
-    background-color: #f1f6fa;
-    border-bottom: 4px solid #FF9933; /* Saffron border */
-    border-top: 4px solid #138808;    /* Green top border */
-    padding: 15px 30px;
+/* Dashboard Header Styling */
+.dash-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    padding: 20px 30px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     font-family: 'Arial', sans-serif;
-    color: #000;
     margin-top: -60px;
     margin-bottom: 20px;
-    border-radius: 4px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
-.gov-header-left, .gov-header-right {
-    flex: 1;
-    display: flex;
-    align-items: center;
-}
-.gov-header-right {
-    justify-content: flex-end;
-}
-.gov-header-center {
-    flex: 3;
+.dash-header-center {
     text-align: center;
 }
-.gov-title-hi {
-    font-size: 1.4rem;
+.dash-title-main {
+    font-size: 1.8rem;
     font-weight: bold;
-    color: #000066;
+    color: #ffffff;
     margin: 0;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
 }
-.gov-title-en {
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: #000066;
-    margin: 5px 0;
-}
-.gov-subtitle {
+.dash-subtitle {
     font-size: 1.1rem;
-    color: #333;
-    margin: 0;
-    font-weight: 600;
-}
-.tricolor-line {
-    height: 4px;
-    background: linear-gradient(to right, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%);
-    width: 100%;
-    margin-top: 5px;
+    color: #e0e0e0;
+    margin: 8px 0 0 0;
 }
 </style>
 
-<div class="gov-header">
-    <div class="gov-header-left">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg" height="90" alt="Emblem of India">
-    </div>
-    <div class="gov-header-center">
-        <p class="gov-title-hi">राष्ट्रीय भूस्खलन जोखिम शमन परियोजना</p>
-        <p class="gov-title-en">National Landslide Risk Mitigation Project (NLRMP)</p>
-        <div class="tricolor-line"></div>
-        <p class="gov-subtitle" style="margin-top:8px;">National Disaster Management Authority, Government of India</p>
-    </div>
-    <div class="gov-header-right">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/c/ce/Digital_India_logo.svg" height="65" alt="Digital India">
+<div class="dash-header">
+    <div class="dash-header-center">
+        <p class="dash-title-main">🏔️ Landslide Risk Mitigation & Early Warning System</p>
+        <p class="dash-subtitle">Real-time Monitoring, Analysis, and Incident Reporting</p>
     </div>
 </div>
 ''', unsafe_allow_html=True)
@@ -195,8 +164,8 @@ def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
     conn.commit()
 
 # --- Sidebar ---
-st.sidebar.image('https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg', width=50)
-st.sidebar.markdown('**Government of India**<br><span style="color:#000066; font-weight:bold;">NDMA Early Warning System</span>', unsafe_allow_html=True)
+st.sidebar.title('🏔️ Landslide Detection System')
+st.sidebar.subheader('Regional Monitoring Portal')
 
 
 st.sidebar.markdown("**Region Filter**")
@@ -218,25 +187,11 @@ refresh = st.sidebar.button('🔄 Refresh Data')
 
 
 st.sidebar.markdown("---")
-theme = st.sidebar.toggle("🌙 Dark Mode", value=False)
 
-# 2. Mountain cursor + theme CSS + animated weather effects
-if theme:
-    bg_color = "#0e1117"
-    text_color = "#fafafa"
-    card_bg = "#262730"
-else:
-    bg_color = "#ffffff"
-    text_color = "#1a1a2e"
-    card_bg = "#f0f2f6"
 
 custom_css = f'''
 <style>
-/* Theme override */
-.stApp {{
-    background-color: {bg_color};
-    color: {text_color};
-}}
+
 
 /* Animated rain effect on background */
 @keyframes rainDrop {{
@@ -296,7 +251,7 @@ if st.sidebar.button("🚨 SOS ALARM 🚨", type="primary", use_container_width=
     play_emergency_siren()
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**© 2026 NDMA, Gov of India**<br>Designed & Developed by<br>National Informatics Centre (NIC)", unsafe_allow_html=True)
+st.sidebar.markdown("**Credits:**\nDeveloped by Regional Landslide Response Team.")
 
 
 # --- Data Loading ---
