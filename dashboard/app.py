@@ -49,24 +49,81 @@ st.set_page_config(page_title='Landslide Early Warning System', layout='wide', p
 
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
+if 'auth_mode' not in st.session_state:
+    st.session_state['auth_mode'] = 'login'
+if 'registered_users' not in st.session_state:
+    st.session_state['registered_users'] = {'admin': 'admin123'}
 
 if not st.session_state['logged_in']:
     st.markdown("<h1 style='text-align: center; margin-top: 100px;'>🔒 Welcome to the Safety Portal</h1>", unsafe_allow_html=True)
-    st.markdown("<h4 style='text-align: center;'>Please log in to continue</h4>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        with st.form("login_form"):
-            username = st.text_input("Username (e.g. admin)", placeholder="admin")
-            password = st.text_input("Password", type="password", placeholder="admin123")
-            submitted = st.form_submit_button("Login", type="primary", use_container_width=True)
-            if submitted:
-                if username and password:
-                    st.session_state['logged_in'] = True
-                    st.session_state['username'] = username
-                    st.rerun()
-                else:
-                    st.error("Please enter valid credentials.")
+        if st.session_state['auth_mode'] == 'login':
+            st.markdown("<h4 style='text-align: center;'>Please log in to continue</h4>", unsafe_allow_html=True)
+            with st.form("login_form"):
+                username = st.text_input("Username", placeholder="admin")
+                password = st.text_input("Password", type="password", placeholder="admin123")
+                submitted = st.form_submit_button("Login", type="primary", use_container_width=True)
+                if submitted:
+                    if username in st.session_state['registered_users'] and st.session_state['registered_users'][username] == password:
+                        st.session_state['logged_in'] = True
+                        st.session_state['username'] = username
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials.")
+            
+            if st.button("Create an Account", use_container_width=True):
+                st.session_state['auth_mode'] = 'signup'
+                st.rerun()
+                
+        elif st.session_state['auth_mode'] == 'signup':
+            st.markdown("<h4 style='text-align: center;'>Create a New Account</h4>", unsafe_allow_html=True)
+            with st.form("signup_form"):
+                new_username = st.text_input("Choose Username")
+                new_email = st.text_input("Email Address")
+                new_password = st.text_input("Choose Password", type="password")
+                signup_submitted = st.form_submit_button("Sign Up", type="primary", use_container_width=True)
+                if signup_submitted:
+                    if new_username and new_password and new_email:
+                        if new_username in st.session_state['registered_users']:
+                            st.error("Username already exists.")
+                        else:
+                            st.session_state['temp_signup'] = {'user': new_username, 'pass': new_password}
+                            st.session_state['generated_otp'] = str(random.randint(100000, 999999))
+                            st.session_state['auth_mode'] = 'otp_verify'
+                            st.rerun()
+                    else:
+                        st.error("Please fill all fields.")
+                        
+            if st.button("Back to Login", use_container_width=True):
+                st.session_state['auth_mode'] = 'login'
+                st.rerun()
+                
+        elif st.session_state['auth_mode'] == 'otp_verify':
+            st.markdown("<h4 style='text-align: center;'>Verify Your Account</h4>", unsafe_allow_html=True)
+            
+            # Simulate automatic OTP sending (mock notification)
+            st.info(f"📲 SYSTEM MESSAGE: A 6-digit OTP has been sent to your device. (Mock OTP: **{st.session_state['generated_otp']}**)")
+            
+            with st.form("otp_form"):
+                entered_otp = st.text_input("Enter 6-digit OTP", max_chars=6)
+                otp_submitted = st.form_submit_button("Verify & Login", type="primary", use_container_width=True)
+                if otp_submitted:
+                    if entered_otp == st.session_state['generated_otp']:
+                        user = st.session_state['temp_signup']['user']
+                        pwd = st.session_state['temp_signup']['pass']
+                        st.session_state['registered_users'][user] = pwd
+                        st.session_state['logged_in'] = True
+                        st.session_state['username'] = user
+                        st.session_state['auth_mode'] = 'login' # Reset state
+                        st.rerun()
+                    else:
+                        st.error("Incorrect OTP. Please try again.")
+                        
+            if st.button("Cancel Registration", use_container_width=True):
+                st.session_state['auth_mode'] = 'signup'
+                st.rerun()
     st.stop()
 
 
