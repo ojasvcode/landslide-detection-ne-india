@@ -86,6 +86,42 @@ def get_sample_scores():
         })
     return pd.DataFrame(data)
 
+def play_emergency_siren():
+    import struct, math
+    sample_rate = 8000
+    duration = 1.5
+    n_samples = int(sample_rate * duration)
+    samples = []
+    for i in range(n_samples):
+        t = i / sample_rate
+        freq = 600 + 600 * (0.5 + 0.5 * math.sin(2 * math.pi * 2 * t))
+        val = int(32767 * 0.4 * math.sin(2 * math.pi * freq * t))
+        samples.append(struct.pack('<h', val))
+    audio_data = b''.join(samples)
+    data_size = len(audio_data)
+    header = struct.pack('<4sI4s4sIHHIIHH4sI',
+        b'RIFF', 36 + data_size, b'WAVE', b'fmt ', 16, 1, 1, sample_rate, sample_rate * 2, 2, 16, b'data', data_size)
+    wav = header + audio_data
+    b64 = base64.b64encode(wav).decode()
+    st.markdown(f'<audio autoplay><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>', unsafe_allow_html=True)
+
+def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
+    timestamp = datetime.datetime.now().isoformat()
+    agencies = [
+        ("NDRF", "National Disaster Response Force"),
+        ("SDMA", f"{state} Disaster Management Authority"),
+        ("HOSPITAL", "Nearest District Hospital"),
+        ("POLICE", f"{state} Police Control Room"),
+    ]
+    if "Severe" in severity:
+        agencies.append(("ARMY", "Indian Army Disaster Relief"))
+        agencies.append(("IAF", "Indian Air Force Rescue"))
+    
+    for code_name, agency in agencies:
+        c.execute("INSERT INTO emergency_alerts (incident_id, alert_type, agency, status, timestamp) VALUES (?, ?, ?, ?, ?)",
+                  (incident_id, code_name, agency, "DISPATCHED", timestamp))
+    conn.commit()
+
 # --- Sidebar ---
 st.sidebar.title('🏔️ Landslide Detection System')
 st.sidebar.subheader('North Eastern India')
@@ -235,43 +271,6 @@ def play_risk_alert(risk_level):
 
 
 
-
-def play_emergency_siren():
-    import struct, math
-    sample_rate = 8000
-    duration = 1.5
-    n_samples = int(sample_rate * duration)
-    samples = []
-    for i in range(n_samples):
-        t = i / sample_rate
-        # Wailing siren: frequency sweeps between 600-1200 Hz
-        freq = 600 + 600 * (0.5 + 0.5 * math.sin(2 * math.pi * 2 * t))
-        val = int(32767 * 0.4 * math.sin(2 * math.pi * freq * t))
-        samples.append(struct.pack('<h', val))
-    audio_data = b''.join(samples)
-    data_size = len(audio_data)
-    header = struct.pack('<4sI4s4sIHHIIHH4sI',
-        b'RIFF', 36 + data_size, b'WAVE', b'fmt ', 16, 1, 1, sample_rate, sample_rate * 2, 2, 16, b'data', data_size)
-    wav = header + audio_data
-    b64 = base64.b64encode(wav).decode()
-    st.markdown(f'<audio autoplay><source src="data:audio/wav;base64,{b64}" type="audio/wav"></audio>', unsafe_allow_html=True)
-
-def dispatch_emergency_alerts(incident_id, state, severity, lat, lon):
-    timestamp = datetime.datetime.now().isoformat()
-    agencies = [
-        ("NDRF", "National Disaster Response Force"),
-        ("SDMA", f"{state} Disaster Management Authority"),
-        ("HOSPITAL", "Nearest District Hospital"),
-        ("POLICE", f"{state} Police Control Room"),
-    ]
-    if "Severe" in severity:
-        agencies.append(("ARMY", "Indian Army Disaster Relief"))
-        agencies.append(("IAF", "Indian Air Force Rescue"))
-    
-    for code_name, agency in agencies:
-        c.execute("INSERT INTO emergency_alerts (incident_id, alert_type, agency, status, timestamp) VALUES (?, ?, ?, ?, ?)",
-                  (incident_id, code_name, agency, "DISPATCHED", timestamp))
-    conn.commit()
 
 
 tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
