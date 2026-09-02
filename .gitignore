@@ -19,3 +19,6 @@ venv.bak/
 # Project files
 .ipynb_checkpoints
 .pytest_cache/
+patch*.py
+populate_db.py
+.vercel/
