@@ -21,7 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-engine = RiskScoringEngine()
+# model_path loads Model A's trained terrain-susceptibility classifier;
+# rainfall_model_path loads Model B's trained I-D threshold + trigger
+# classifier. Both paths are relative to this file's location.
+engine = RiskScoringEngine(
+    model_path="ml-pipeline/model-a-lsm",
+    rainfall_model_path="src/models/rainfall_threshold_model.pkl",
+)
 
 @app.get("/")
 def read_root():
@@ -34,7 +40,7 @@ def get_all_risk():
         scores_df = engine.score_all_stations()
         if scores_df.empty:
             return {"status": "success", "data": []}
-            
+
         scores_df = scores_df.sort_values(by="risk_probability", ascending=False)
         return {"status": "success", "data": scores_df.to_dict(orient="records")}
     except Exception as e:
@@ -47,12 +53,11 @@ def get_state_risk(state_name: str):
         scores_df = engine.score_state(state_name)
         if scores_df.empty:
             return {"status": "success", "data": [], "message": f"No data or stations found for {state_name}"}
-            
+
         scores_df = scores_df.sort_values(by="risk_probability", ascending=False)
         return {"status": "success", "state": state_name, "data": scores_df.to_dict(orient="records")}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/risk/geojson")
 def get_risk_geojson():
@@ -77,7 +82,6 @@ def get_risk_geojson():
                 }
             }
             features.append(feature)
-        
         geojson = {
             "type": "FeatureCollection",
             "features": features
@@ -87,6 +91,5 @@ def get_risk_geojson():
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-
     import uvicorn
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)

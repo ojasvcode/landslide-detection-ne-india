@@ -12,14 +12,38 @@ import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
 
+def get_utm_epsg(bounds, src_crs):
+    """Computes the correct UTM zone EPSG code for a raster's actual
+    location, instead of assuming one fixed zone. A DEM spanning a wide
+    longitude range (e.g. a full state) can easily fall outside whatever
+    single zone worked for a narrower AOI - reprojecting into the wrong
+    zone causes severe distortion (garbage/NaN slope values) or outright
+    warp failures for extreme cases."""
+    from pyproj import Transformer
+
+    if src_crs.to_string() != "EPSG:4326":
+        transformer = Transformer.from_crs(src_crs, "EPSG:4326", always_xy=True)
+        center_x, center_y = transformer.transform(
+            (bounds.left + bounds.right) / 2, (bounds.bottom + bounds.top) / 2
+        )
+    else:
+        center_x = (bounds.left + bounds.right) / 2
+        center_y = (bounds.bottom + bounds.top) / 2
+
+    zone = int((center_x + 180) / 6) + 1
+    epsg = 32600 + zone if center_y >= 0 else 32700 + zone  # N vs S hemisphere
+    return f"EPSG:{epsg}"
+
+
 def reproject_to_utm(src_path, dst_path):
     with rasterio.open(src_path) as src:
         # SRTM tiles from OpenTopography come in EPSG:4326 (lat/lon degrees).
         # Slope/aspect math needs pixel size in METERS, not degrees, or the
-        # gradient calculation silently produces wrong angles. East Khasi
-        # Hills sits in UTM zone 46N (EPSG:32646) - reprojecting here once
-        # avoids every downstream script having to reason about CRS units.
-        dst_crs = "EPSG:32646"
+        # gradient calculation silently produces wrong angles. The correct
+        # UTM zone is computed per-DEM from its actual bounds rather than
+        # assumed, since North East India alone spans multiple UTM zones
+        # (45N through 47N).
+        dst_crs = get_utm_epsg(src.bounds, src.crs)
         if src.crs.to_string() == dst_crs:
             with rasterio.open(dst_path, "w", **src.meta) as dst:
                 dst.write(src.read())
